@@ -1,0 +1,37 @@
+[
+  { "name": "webproxy:wp-app-prod101", "net": "10.241.225.108/32", "track": "" },
+  { "name": "webproxy:wp-app-prod102", "net": "10.241.225.109/32", "track": "" },
+  { "name": "webproxy:wp-app-prod103", "net": "10.241.225.110/32", "track": "" },
+  { "name": "webproxy:wp-app-prod104", "net": "10.241.225.111/32", "track": "" },
+
+  { "name": "webproxy:wp-app-syst01", "net": "10.241.225.86/32", "track": "" },
+  { "name": "webproxy:wp-app-syst02", "net": "10.241.225.87/32", "track": "" },
+  { "name": "webproxy:wp-app-devl01", "net": "10.241.225.101/32", "track": "" },
+  { "name": "webproxy:wp-app-test01", "net": "10.241.225.103/32", "track": "" },
+  { "name": "webproxy:wp-app-test02", "net": "10.241.225.104/32", "track": "" },
+
+  { "name": "unknown:zenoss", "net": "10.104.0.0/28", "track": "hosts,uri" },
+
+  { "name": "unknown:VDI-pilot-INC12111778", "net": "10.57.246.0/23", "track": "hosts,uri" },
+  { "name": "unknown:MET-VDI-INC11958314", "net": "10.60.0.0/26", "track": "hosts,uri" },
+  { "name": "unknown:Questrom-VCloud-INC11829734", "net": "10.241.200.64/26", "track": "hosts,uri" },
+  { "name": "unknown:Isilon", "net": "10.232.15.0/24", "track": "hosts,uri" },
+
+  { "name": "unknown:BUMC-VPN?", "net": "10.224.162.0/23", "track": "hosts,uri" },
+
+  { "name": "unknown:IST-solaris-26net", "net": "10.241.26.0/24", "track": "hosts,uri" },
+  { "name": "unknown:IST-solaris-28net", "net": "10.241.26.0/24", "track": "hosts,uri" },
+
+  { "name": "unknown:IST-privnet", "net": "10.231.9.0/24", "track": "hosts,uri" },
+  { "name": "unknown:IST-privnet", "net": "10.231.8.0/24", "track": "hosts,uri" },
+
+  { "name": "unknown:IST-225net", "net": "10.241.225.0/24", "track": "hosts,uri" },
+  { "name": "unknown:IST-16net", "net": "10.231.16.0/24", "track": "hosts,uri" },
+
+  { "name": "NAT:BMC-network", "net": "10.128.0.0/10", "track": "hosts", 
+      "note": "10/2/17- confirmed that BMC network 10net will NAT for their outgoing traffic" },
+
+  { "name": "unknown:BUMC-network", "net": "10.224.0.0/15", "track": "hosts,uri" },
+
+  { "name": "unknown:BU-10net", "net": "10.0.0.0/8", "track": "hosts,uri" }
+]
