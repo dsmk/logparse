@@ -284,7 +284,9 @@ func ParseAccess (lineno int, line string) (map[string]string) {
   }
 
   if len(request_elements) > 2 {
-    protocol = request_elements[2]
+    elen := len(request_elements[2])
+
+    protocol = request_elements[2][0:elen-1]
   } else {
     fmt.Printf("request_line error near protocol: (%s)\n", request_line)
     fmt.Printf("  quoted=(%s)\n", quoted)
