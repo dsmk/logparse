@@ -34,17 +34,7 @@ type network struct {
 var alreadyIP = regexp.MustCompile(`^\d+\.\d+\.\d+\.\d+$`)
 var buDomain = regexp.MustCompile(`\.bu\.edu$`)
 
-func buildIPRanges (filename string) ([]network, error) {
-  var data []map[string]string
-
-  file, err := ioutil.ReadFile(filename)
-  if err != nil {
-    return nil, err
-  }
-  err = json.Unmarshal(file, &data)
-  if err != nil {
-    return nil, err
-  }
+func initIPRanges (data []map[string]string) ([]network, error) {
 
   ipranges := make([]network, len(data))
 
@@ -70,6 +60,21 @@ func buildIPRanges (filename string) ([]network, error) {
   }
 
   return ipranges, nil
+}
+
+func buildIPRanges (filename string) ([]network, error) {
+  var data []map[string]string
+
+  file, err := ioutil.ReadFile(filename)
+  if err != nil {
+    return nil, err
+  }
+  err = json.Unmarshal(file, &data)
+  if err != nil {
+    return nil, err
+  }
+
+  return initIPRanges (data)
 }
 
 func findNetwork (ipranges []network, ip string) (string, bool, bool, string) {
