@@ -24,8 +24,9 @@ type trackedData struct {
 }
 
 type trackedOverall struct {
-  tracked_networks map[string]trackedData
-  tracked_sites map[string]trackedData
+  number int
+  networks map[string]trackedData
+  sites map[string]trackedData
 }
 
 type network struct {
@@ -118,36 +119,30 @@ func findNetwork (ipranges []network, ip string) (string, bool, bool, string) {
 }
 
 
-    
-func trackEntry (ipranges []network, tracking map[string]trackedData, entry map[string]string ) {
+func trackEntryItem (tracking map[string]trackedData, label string, ip string , base_uri string, trackHosts bool, trackURI bool ) {
+  element, isPresent := tracking[label]
+  if isPresent {
+    //fmt.Printf("element already present for %s\n", label)
+  } else {
+    host := make(map[string]int)
+    base_uri := make(map[string]int)
+    tracking[label] = trackedData{ 0, host, base_uri, trackHosts, trackURI }
+    element = tracking[label]
+  }
+
+  element.base_uri["_total"]++
+  if trackHosts {
+    element.hosts[ip]++
+  }
+  if trackURI {
+    element.base_uri[base_uri]++
+  }
+}
+
+func trackEntry (ipranges []network, tracking trackedOverall, entry map[string]string ) {
   ip, trackHosts, trackURI, label := findNetwork(ipranges, entry["ip"])
 
-  //fmt.Printf("entry(%s:%s)= %b, %s\n", entry["ip"], ip, track, label)
-
-  //if trackHosts || trackURI {
-    //DumpAccess(" parsed line", entry)
-
-    element, isPresent := tracking[label]
-    if isPresent {
-      //fmt.Printf("element already present for %s\n", label)
-    } else {
-      host := make(map[string]int)
-      base_uri := make(map[string]int)
-      tracking[label] = trackedData{ 0, host, base_uri, trackHosts, trackURI }
-      element = tracking[label]
-    }
-
-    element.base_uri["_total"]++
-    if trackHosts {
-      element.hosts[ip]++
-    }
-    if trackURI {
-      element.base_uri[entry["base_uri"]]++
-    }
-  //}
-
-  // if tracking, then record the base_uri, retcode, and https under the IP
-  //
+  trackEntryItem(tracking.networks, label, ip, entry["base_uri"], trackHosts, trackURI)
 }
 
 type keyValue struct {
@@ -167,15 +162,14 @@ func sortedMap (data map[string]int) ([]keyValue) {
   return tempData
 }
 
-func dumpTracked (tracking map[string]trackedData) {
+func dumpTrackedData (label string, tracking map[string]trackedData) {
   var hostname string
 
-  // go through the tracked info and 
   for k, v := range tracking {
 
     fmt.Printf("\n=======================================================================\n")
-    fmt.Printf("*** %s (%d requests; %d unique hosts, %d base_uri)\n", 
-      k, v.base_uri["_total"], len(v.hosts), len(v.base_uri)-1 )
+    fmt.Printf("*** %s:%s (%d requests; %d unique hosts, %d base_uri)\n", 
+      label, k, v.base_uri["_total"], len(v.hosts), len(v.base_uri)-1 )
 
     if v.trackHosts {
       fmt.Printf("\n * %s IPs\n", k)
@@ -187,7 +181,7 @@ func dumpTracked (tracking map[string]trackedData) {
         } else { 
           hostname = iplist[0]
         }
-        fmt.Printf("  %8d: %s (%s - hostname=%s)\n", item.Value, item.Key, k, hostname)
+        fmt.Printf("  %8d: %s (%s:%s - hostname=%s)\n", item.Value, item.Key, label, k, hostname)
       }
     }
 
@@ -196,11 +190,17 @@ func dumpTracked (tracking map[string]trackedData) {
       tempData := sortedMap(v.base_uri)
       for _, item := range tempData {
         if item.Key != "_total" {
-          fmt.Printf("  %8d: %s (%s)\n", item.Value, item.Key, k)
+          fmt.Printf("  %8d: %s (%s:%s)\n", item.Value, item.Key, label, k)
         }
       }
     }
   }
+
+}
+
+func dumpTracked (tracking trackedOverall) {
+
+  dumpTrackedData("network", tracking.networks)
 
 }
 
@@ -388,20 +388,27 @@ func ParseAccess (lineno int, line string) (map[string]string) {
   return entry
 }
 
+func initTrackedData () (trackedOverall) {
+  networks := make(map[string]trackedData)
+  sites := make(map[string]trackedData)
+  return trackedOverall{ 0, networks, sites }
+}
+
 func main() {
   ipranges, err := buildIPRanges("ipnets.json")
   if err != nil {
     log.Fatal(err)
   }
-  tracking := make(map[string]trackedData)
+  //tracking := make(map[string]trackedData)
   number := 0
   scanner := bufio.NewScanner(os.Stdin)
+  tracking := initTrackedData()
 
   for scanner.Scan() {
     line := scanner.Text()
     entry := ParseAccess(number, line)
     if entry != nil {
-    trackEntry(ipranges, tracking, entry)
+      trackEntry(ipranges, tracking, entry)
     } else {
       fmt.Printf("%d: parse line %s\n", number, line)
     }
