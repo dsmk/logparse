@@ -208,7 +208,7 @@ var whitespace = regexp.MustCompile(`\s+`)
 //var frozen_whitespace = regexp.MustCompile(`++++`)
 var quotes = regexp.MustCompile(`".*?[^\\]"`)
 // get the top-level and second level names
-var parseLevels = regexp.MustCompile(`^/+([^/]+)(/+)?([^/]+)?`)
+var parseLevels = regexp.MustCompile(`^/+([^/]+)?(/+)?([^/]+)?`)
 
 func SpaceFreeze (input string) (string) {
   output := whitespace.ReplaceAllLiteralString(input, "++++")
@@ -267,11 +267,12 @@ func ParseAccess (lineno int, line string) (map[string]string) {
 
   //fmt.Printf("%d: parsed (%+v)\n", lineno, elements)
 
-  //fmt.Printf("elements=%+v\n", elements)
-  //fmt.Printf("========= number=%d\n", len(elements))
-  //for index := 0; index < len(elements) ; index++ {
-  //  fmt.Printf("  element[%d]=(%s)\n", index, elements[index])
-  //}
+  /*
+  fmt.Printf("========= number=%d\n", len(elements))
+  for index := 0; index < len(elements) ; index++ {
+    fmt.Printf("  element[%d]=(%s)\n", index, elements[index])
+  }
+  */
   request_line := SpaceThaw(elements[5])
   
   if strings.Contains(request_line, " ") {
@@ -315,9 +316,10 @@ func ParseAccess (lineno int, line string) (map[string]string) {
 
   // now we determine the top level and the second-level
   topLevel := parseLevels.FindStringSubmatch(base_uri)
-  //for k, v := range topLevel {
-  //  fmt.Printf("%d: %s\n", k, v)
-  //}
+  /* fmt.Printf("topLevel=%+v\n", topLevel)
+  for k, v := range topLevel {
+    fmt.Printf("%d: %s\n", k, v)
+  } */
   
   if len(request_elements) > 2 {
     elen := len(request_elements[2])
