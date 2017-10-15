@@ -41,19 +41,12 @@ func TestFindNetwork (t *testing.T) {
   //t.Errorf("Testing having a test fail %d\n", 1)
 }
 
-func TestMainParseToplevel (t *testing.T) {
-  line := `67.249.231.2 - - [01/Sep/2017:00:00:08 -0400] "GET /met?ver=4.6.6 HTTP/1.1" 200 1403 0.007192 0.000000 0.000000 "http://www.bu.edu/met/programs/graduate/arts-administration/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36" 10673 + WajbSArxHDYAACmxCSUAAAVW 128.197.26.35 off:http`
-  expected_elapsed := 0.007192
-  expect := map[string]string {
-    "ip": "67.249.231.2",
-    "toplevel": "met",
-    "base_uri": "/met",
-    "uri": "/met?ver=4.6.6",
-    "browser": `"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36"`,
-    "protocol": `HTTP/1.1`,
-  }
-
+func ParseAccessTest (t *testing.T, line string, expected_elapsed float64, expect map[string]string) {
   item := ParseAccess(1, line)
+
+  for k, v := range item {
+    t.Logf(" %s: (%s)", k, v)
+  }
 
   for k, v := range expect {
     if item[k] != v {
@@ -70,6 +63,21 @@ func TestMainParseToplevel (t *testing.T) {
       t.Errorf("elapsed: got (%f) expected (%f)", elapsed, expected_elapsed)
     }
   }
+}
+
+func TestMainParseToplevel (t *testing.T) {
+  line := `67.249.231.2 - - [01/Sep/2017:00:00:08 -0400] "GET /met?ver=4.6.6 HTTP/1.1" 200 1403 0.007192 0.000000 0.000000 "http://www.bu.edu/met/programs/graduate/arts-administration/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36" 10673 + WajbSArxHDYAACmxCSUAAAVW 128.197.26.35 off:http`
+  expected_elapsed := 0.007192
+  expect := map[string]string {
+    "ip": "67.249.231.2",
+    "toplevel": "met",
+    "base_uri": "/met",
+    "uri": "/met?ver=4.6.6",
+    "browser": `"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36"`,
+    "protocol": `HTTP/1.1`,
+  }
+
+  ParseAccessTest(t, line, expected_elapsed, expect)
 
   //t.Errorf("returned %+v", item)
 }
@@ -86,23 +94,7 @@ func TestMainParseOK (t *testing.T) {
     "protocol": `HTTP/1.1`,
   }
 
-  item := ParseAccess(1, line)
-
-  for k, v := range expect {
-    if item[k] != v {
-      t.Errorf("%s: parsed (%s) instead of (%s)", k, item[k], v)
-    }
-  }
-
-  // convert elapsed to a number and check it
-  elapsed, err := ConvertElapsed(item["elapsed"])
-  if err != nil {
-    t.Error(err)
-  } else {
-    if elapsed != expected_elapsed {
-      t.Errorf("elapsed: got (%f) expected (%f)", elapsed, expected_elapsed)
-    }
-  }
+  ParseAccessTest(t, line, expected_elapsed, expect)
 
   //t.Errorf("returned %+v", item)
 }
@@ -121,28 +113,7 @@ func TestW3VParseOK (t *testing.T) {
     "virtual": "blogs.bu.edu",
   }
 
-  item := ParseAccess(1, line)
-
-  //for k, v := range item {
-  //  t.Errorf(" %s: (%s)", k, v)
-  //}
-
-  for k, v := range expect {
-    
-    if item[k] != v {
-      t.Errorf("%s: parsed (%s) instead of (%s)", k, item[k], v)
-    }
-  }
-
-  // convert elapsed to a number and check it
-  elapsed, err := ConvertElapsed(item["elapsed"])
-  if err != nil {
-    t.Error(err)
-  } else {
-    if elapsed != expected_elapsed {
-      t.Errorf("elapsed: got (%f) expected (%f)", elapsed, expected_elapsed)
-    }
-  }
+  ParseAccessTest(t, line, expected_elapsed, expect)
 
   //t.Errorf("returned %+v", item)
 }
