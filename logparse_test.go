@@ -41,10 +41,45 @@ func TestFindNetwork (t *testing.T) {
   //t.Errorf("Testing having a test fail %d\n", 1)
 }
 
-func TestMainParseOK (t *testing.T) {
-  line := `67.249.231.2 - - [01/Sep/2017:00:00:08 -0400] "GET /met/wp-includes/js/wp-embed.min.js?ver=4.6.6 HTTP/1.1" 200 1403 0.007192 0.000000 0.000000 "http://www.bu.edu/met/programs/graduate/arts-administration/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36" 10673 + WajbSArxHDYAACmxCSUAAAVW 128.197.26.35 off:http`
+func TestMainParseToplevel (t *testing.T) {
+  line := `67.249.231.2 - - [01/Sep/2017:00:00:08 -0400] "GET /met?ver=4.6.6 HTTP/1.1" 200 1403 0.007192 0.000000 0.000000 "http://www.bu.edu/met/programs/graduate/arts-administration/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36" 10673 + WajbSArxHDYAACmxCSUAAAVW 128.197.26.35 off:http`
+  expected_elapsed := 0.007192
   expect := map[string]string {
     "ip": "67.249.231.2",
+    "toplevel": "met",
+    "base_uri": "/met",
+    "uri": "/met?ver=4.6.6",
+    "browser": `"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36"`,
+    "protocol": `HTTP/1.1`,
+  }
+
+  item := ParseAccess(1, line)
+
+  for k, v := range expect {
+    if item[k] != v {
+      t.Errorf("%s: parsed (%s) instead of (%s)", k, item[k], v)
+    }
+  }
+
+  // convert elapsed to a number and check it
+  elapsed, err := ConvertElapsed(item["elapsed"])
+  if err != nil {
+    t.Error(err)
+  } else {
+    if elapsed != expected_elapsed {
+      t.Errorf("elapsed: got (%f) expected (%f)", elapsed, expected_elapsed)
+    }
+  }
+
+  //t.Errorf("returned %+v", item)
+}
+
+func TestMainParseOK (t *testing.T) {
+  line := `67.249.231.2 - - [01/Sep/2017:00:00:08 -0400] "GET /met/wp-includes/js/wp-embed.min.js?ver=4.6.6 HTTP/1.1" 200 1403 0.007192 0.000000 0.000000 "http://www.bu.edu/met/programs/graduate/arts-administration/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36" 10673 + WajbSArxHDYAACmxCSUAAAVW 128.197.26.35 off:http`
+  expected_elapsed := 0.007192
+  expect := map[string]string {
+    "ip": "67.249.231.2",
+    "toplevel": "met",
     "base_uri": "/met/wp-includes/js/wp-embed.min.js",
     "uri": "/met/wp-includes/js/wp-embed.min.js?ver=4.6.6",
     "browser": `"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36"`,
@@ -56,6 +91,56 @@ func TestMainParseOK (t *testing.T) {
   for k, v := range expect {
     if item[k] != v {
       t.Errorf("%s: parsed (%s) instead of (%s)", k, item[k], v)
+    }
+  }
+
+  // convert elapsed to a number and check it
+  elapsed, err := ConvertElapsed(item["elapsed"])
+  if err != nil {
+    t.Error(err)
+  } else {
+    if elapsed != expected_elapsed {
+      t.Errorf("elapsed: got (%f) expected (%f)", elapsed, expected_elapsed)
+    }
+  }
+
+  //t.Errorf("returned %+v", item)
+}
+
+func TestW3VParseOK (t *testing.T) {
+  line := `101.50.113.106 - - [12/Oct/2017:04:04:33 -0400] "GET /bubadmin/style.css?ver=1 HTTP/1.1" 200 3485 10359:10360 0.000000 0.000000 "http://blogs.bu.edu/bubadmin/contact-us/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36" 3104 + -ZFabgrnCRgAAAwgIzYAAABD 10.231.9.24 off:http wwwv.bu.edu blogs.bu.edu`
+
+  expected_elapsed := 0.01036
+  expect := map[string]string {
+    "ip": "101.50.113.106",
+    "toplevel" : "bubadmin",
+    "base_uri": "/bubadmin/style.css",
+    "uri": "/bubadmin/style.css?ver=1",
+    "browser": `"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36"`,
+    "protocol": `HTTP/1.1`,
+    "virtual": "blogs.bu.edu",
+  }
+
+  item := ParseAccess(1, line)
+
+  //for k, v := range item {
+  //  t.Errorf(" %s: (%s)", k, v)
+  //}
+
+  for k, v := range expect {
+    
+    if item[k] != v {
+      t.Errorf("%s: parsed (%s) instead of (%s)", k, item[k], v)
+    }
+  }
+
+  // convert elapsed to a number and check it
+  elapsed, err := ConvertElapsed(item["elapsed"])
+  if err != nil {
+    t.Error(err)
+  } else {
+    if elapsed != expected_elapsed {
+      t.Errorf("elapsed: got (%f) expected (%f)", elapsed, expected_elapsed)
     }
   }
 

@@ -12,6 +12,7 @@ import (
   "encoding/json"
   "io/ioutil"
   "sort"
+  "strconv"
 )
 
 type trackedData struct {
@@ -20,6 +21,11 @@ type trackedData struct {
   base_uri map[string]int
   trackHosts bool
   trackURI bool
+}
+
+type trackedOverall struct {
+  tracked_networks map[string]trackedData
+  tracked_sites map[string]trackedData
 }
 
 type network struct {
@@ -201,6 +207,8 @@ func dumpTracked (tracking map[string]trackedData) {
 var whitespace = regexp.MustCompile(`\s+`)
 //var frozen_whitespace = regexp.MustCompile(`++++`)
 var quotes = regexp.MustCompile(`".*?[^\\]"`)
+// get the top-level and second level names
+var parseLevels = regexp.MustCompile(`^/+([^/]+)(/+)?([^/]+)?`)
 
 func SpaceFreeze (input string) (string) {
   output := whitespace.ReplaceAllLiteralString(input, "++++")
@@ -215,6 +223,27 @@ func SpaceThaw (input string) (string) {
 func DumpAccess (prefix string, entry map[string]string) {
   for k, v := range entry {
     fmt.Printf("%s[%s]=(%s)\n", prefix, k, v)
+  }
+}
+
+func ConvertElapsed (elapsed_s string) (float64, error) {
+  if strings.Contains(elapsed_s, ":") {
+    // two integer numbers separated by a colon - that is the time in microseconds
+    elapsed_s = (strings.SplitN(elapsed_s, ":", 2))[1]
+    elapsed, err := strconv.ParseFloat(elapsed_s, 64)
+    if err != nil {
+      return elapsed, err
+    } else {
+      elapsed = elapsed / 1000000
+      return elapsed, nil
+    }
+  } else {
+    // single float number - that is the time in seconds
+    elapsed, err := strconv.ParseFloat(elapsed_s, 64)
+    if err != nil {
+      return elapsed, err
+    }
+    return elapsed, err
   }
 }
 
@@ -239,6 +268,7 @@ func ParseAccess (lineno int, line string) (map[string]string) {
   //fmt.Printf("%d: parsed (%+v)\n", lineno, elements)
 
   //fmt.Printf("elements=%+v\n", elements)
+  //fmt.Printf("========= number=%d\n", len(elements))
   //for index := 0; index < len(elements) ; index++ {
   //  fmt.Printf("  element[%d]=(%s)\n", index, elements[index])
   //}
@@ -283,6 +313,12 @@ func ParseAccess (lineno int, line string) (map[string]string) {
     base_uri = request_elements[1]
   }
 
+  // now we determine the top level and the second-level
+  topLevel := parseLevels.FindStringSubmatch(base_uri)
+  //for k, v := range topLevel {
+  //  fmt.Printf("%d: %s\n", k, v)
+  //}
+  
   if len(request_elements) > 2 {
     elen := len(request_elements[2])
 
@@ -303,6 +339,8 @@ func ParseAccess (lineno int, line string) (map[string]string) {
     "method" : method,
     "uri" : uri,
     "base_uri" : base_uri,
+    "toplevel": topLevel[1],
+    "secondLevel": topLevel[3],
     "protocol" : protocol,
     "ret" : elements[6],
     "size" : elements[7],
@@ -322,6 +360,19 @@ func ParseAccess (lineno int, line string) (map[string]string) {
   //fmt.Printf("ip=%s\n", entry["ip"])
 
   //fmt.Printf("%d: entry %+v\n\n", lineno, entry)
+  // only some lines (like w3v) will have the extra items
+  if len(elements) > 16 {
+    entry["***unknown1"] = elements[16]
+  }
+  if len(elements) > 17 {
+    entry["***unknown2"] = elements[17]
+  }
+  if len(elements) > 18 {
+    entry["***unknown3"] = elements[18]
+  }
+  if len(elements) > 19 {
+    entry["virtual"] = elements[19]
+  }
 
   return entry
 }
