@@ -93,6 +93,23 @@ func TestMainParseToplevel (t *testing.T) {
   //t.Errorf("returned %+v", item)
 }
 
+func TestParseAccessBadRequest (t *testing.T) {
+  line := `190.152.18.202 - - [12/Oct/2017:04:08:48 -0400] "u" 501 213 758:759 0.001000 0.000000 "-" "-" 4135 - DMZUxwrnCRgAABAnMH8AAADO 10.231.9.24 off:- wwwv.bu.edu -`
+  expected_elapsed := 0.000759
+  expect := map[string]string {
+    "ip": "190.152.18.202",
+    "toplevel": "-error-",
+    "base_uri": "baduri",
+    "uri": "baduri",
+    "browser": `"-"`,
+    "protocol": `UNKNOWN`,
+  }
+
+  testParseAccess(t, line, expected_elapsed, expect)
+
+  //t.Errorf("returned %+v", item)
+}
+
 func TestMainParseOK (t *testing.T) {
   line := `67.249.231.2 - - [01/Sep/2017:00:00:08 -0400] "GET /met/wp-includes/js/wp-embed.min.js?ver=4.6.6 HTTP/1.1" 200 1403 0.007192 0.000000 0.000000 "http://www.bu.edu/met/programs/graduate/arts-administration/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36" 10673 + WajbSArxHDYAACmxCSUAAAVW 128.197.26.35 off:http`
   expected_elapsed := 0.007192
