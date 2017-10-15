@@ -364,13 +364,18 @@ func ParseAccess (lineno int, line string) (map[string]string) {
   //fmt.Printf("%d: entry %+v\n\n", lineno, entry)
   // only some lines (like w3v) will have the extra items
   if len(elements) > 16 {
-    entry["***unknown1"] = elements[16]
+    entry["serverip"] = elements[16]
   }
   if len(elements) > 17 {
-    entry["***unknown2"] = elements[17]
+    entry["https"] = elements[17]
+    if strings.Contains(elements[17], ":") {
+      https_elements := strings.SplitN(elements[17], ":", 2)
+      entry["https_local"] = https_elements[0]
+      entry["https_client"] = https_elements[1]
+    }
   }
   if len(elements) > 18 {
-    entry["***unknown3"] = elements[18]
+    entry["virtual_config_block"] = elements[18]
   }
   if len(elements) > 19 {
     entry["virtual"] = elements[19]
