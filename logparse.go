@@ -278,7 +278,7 @@ func ParseAccess (lineno int, line string) (map[string]string) {
   if strings.Contains(request_line, " ") {
     request_elements = whitespace.Split(request_line, -1)
   } else {
-    request_elements = whitespace.Split("UNKNOWN baduri UNKNOWN", -1)
+    request_elements = whitespace.Split(`"UNKNOWN baduri UNKNOWN"`, -1)
     fmt.Printf("request_line error only a garbage string: (%s)\n", request_line)
     fmt.Printf("  quoted=(%s)\n", quoted)
     for index := 0; index < len(elements) ; index++ {
@@ -316,8 +316,12 @@ func ParseAccess (lineno int, line string) (map[string]string) {
 
   // now we determine the top level and the second-level
   topLevel := parseLevels.FindStringSubmatch(base_uri)
-  /* fmt.Printf("topLevel=%+v\n", topLevel)
-  for k, v := range topLevel {
+  if len(topLevel) < 4 {
+    // no match 
+    topLevel = []string{ "", "-error-", "", "" }
+  }
+  //fmt.Printf("topLevel(%d)=%+v\n", len(topLevel), topLevel)
+  /* for k, v := range topLevel {
     fmt.Printf("%d: %s\n", k, v)
   } */
   
@@ -326,9 +330,9 @@ func ParseAccess (lineno int, line string) (map[string]string) {
 
     protocol = request_elements[2][0:elen-1]
   } else {
-    fmt.Printf("request_line error near protocol: (%s)\n", request_line)
-    fmt.Printf("  quoted=(%s)\n", quoted)
-    protocol = "unknown"
+    //fmt.Printf("request_line error near protocol: (%s)\n", request_line)
+    //fmt.Printf("  quoted=(%s)\n", quoted)
+    protocol = "HTTP/0.9"
   }
 
   entry := map[string]string {
