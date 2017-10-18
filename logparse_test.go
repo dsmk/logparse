@@ -5,21 +5,29 @@ import (
 )
 
 var testIPData = []map[string]string {
+  { "virtual": "testdomain1", "status": "ignore" },
+  { "virtual": "testdomain2", "status": "track" },
+  { "virtual": "testdomain3", "status": "summarize" },
   { "name": "10net", "net": "10.0.0.0/8", "track": "hosts,uri" },
   { "name": "localhost", "net": "127.0.0.1/32", "track": "uri" },
 }
 
-func testIPRanges () ([]network) {
-  ipranges, _ := initIPRanges(testIPData)
+func testIPRanges () (logConfig, error) {
+  ipranges, err := initIPRanges(testIPData)
 
-  return ipranges
+  return ipranges, err
 }
 
 func TestInitIPRanges (t *testing.T) {
-  ipranges := testIPRanges()
+  config, err := testIPRanges()
 
-  //t.Errorf("ipranges=%+v", ipranges)
-  for num, item := range ipranges {
+  if err != nil {
+    t.Errorf("error=%+v", err)
+    return
+  }
+
+  //t.Errorf("ipranges=%+v", config)
+  for num, item := range config.ipranges {
     t.Logf("item[%d]=%s name=%s -> %s", num, item, item.name, testIPData[num]["name"])
     if item.name != testIPData[num]["name"] {
       t.Errorf("build failed: name should be %s but is %s", testIPData[num]["name"], item.name)
@@ -28,9 +36,14 @@ func TestInitIPRanges (t *testing.T) {
 }
 
 func TestFindNetwork (t *testing.T) {
-  ipranges := testIPRanges()
+  config, err := testIPRanges()
 
-  ip, trackH, trackU, name := findNetwork(ipranges, "10.0.0.1")
+  if err != nil {
+    t.Errorf("error=%+v", err)
+    return
+  }
+
+  ip, trackH, trackU, name := findNetwork(config, "10.0.0.1")
 
   if ip != "10.0.0.1" {
     t.Errorf("test ip != 10.0.0.1")
