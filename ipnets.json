@@ -10,6 +10,9 @@
   { "name": "webproxy:wp-app-test01", "net": "10.241.225.103/32", "track": "" },
   { "name": "webproxy:wp-app-test02", "net": "10.241.225.104/32", "track": "" },
 
+  { "name": "ignore:F5-prod-1", "net": "10.231.9.92/32", "track": "" },
+  { "name": "ignore:F5-prod-2", "net": "10.231.9.91/32", "track": "" },
+
   { "name": "unknown:zenoss", "net": "10.104.0.0/28", "track": "hosts,uri" },
 
   { "name": "unknown:VDI-pilot-INC12111778", "net": "10.57.246.0/23", "track": "hosts,uri" },
@@ -34,4 +37,5 @@
   { "name": "unknown:BUMC-network", "net": "10.224.0.0/15", "track": "hosts,uri" },
 
   { "name": "unknown:BU-10net", "net": "10.0.0.0/8", "track": "hosts,uri" }
+
 ]
