@@ -38,55 +38,92 @@ type network struct {
   trackURI bool
 }
 
+type logConfig struct {
+  ipranges []network
+  vhosts map[string]int
+}
+
 // use ipcalc http://jodies.de/ipcalc to test the ranges
 
 var alreadyIP = regexp.MustCompile(`^\d+\.\d+\.\d+\.\d+$`)
 var buDomain = regexp.MustCompile(`\.bu\.edu$`)
 
-func initIPRanges (data []map[string]string) ([]network, error) {
+func initIPRanges (data []map[string]string) (logConfig, error) {
 
   ipranges := make([]network, len(data))
+  vhosts := make(map[string]int)
 
   for num, item := range data {
-    trackHosts := false
-    trackURI := false
+    // if this contains a virtual keyword
+    virtual, isPresent := item["virtual"]
+    if isPresent {
+      // we need to add the virtual host to the list
+      status := 1
+      if item["status"] == "ignore" {
+        status = -1
+      } else if item["status"] == "summarize" {
+        status = 0
+      }
+      vhosts[virtual] = status
 
-    // set the track booleans based on the contents of the track item
-    if strings.Contains(item["track"], "hosts") {
-      trackHosts = true
-    }
-    if strings.Contains(item["track"], "uri") {
-      trackURI = true
+    } else {
+      // we presume it is a network entry
+      trackHosts := false
+      trackURI := false
+
+      // set the track booleans based on the contents of the track item
+      if strings.Contains(item["track"], "hosts") {
+        trackHosts = true
+      }
+      if strings.Contains(item["track"], "uri") {
+        trackURI = true
+      }
+
+      // parse the cidr into Go's internal form
+      _, ipnet, err := net.ParseCIDR(item["net"])
+      if err != nil {
+        return logConfig{}, err
+      }
+
+      ipranges[num] = network{ item["name"], ipnet, trackHosts, trackURI } 
     }
 
-    // parse the cidr into Go's internal form
-    _, ipnet, err := net.ParseCIDR(item["net"])
-    if err != nil {
-      return nil, err
-    }
-
-    ipranges[num] = network{ item["name"], ipnet, trackHosts, trackURI } 
   }
 
-  return ipranges, nil
+  // now that we are done we need to build our structure
+  return logConfig{ ipranges, vhosts }, nil
 }
 
-func buildIPRanges (filename string) ([]network, error) {
+func buildIPRanges (filename string) (logConfig, error) {
   var data []map[string]string
 
   file, err := ioutil.ReadFile(filename)
   if err != nil {
-    return nil, err
+    return logConfig{}, err
   }
   err = json.Unmarshal(file, &data)
   if err != nil {
-    return nil, err
+    return logConfig{}, err
   }
 
   return initIPRanges (data)
 }
 
-func findNetwork (ipranges []network, ip string) (string, bool, bool, string) {
+func findVirtual (config logConfig, vhost string) (string, bool, bool) {
+
+  status, isPresent := config.vhosts[vhost]
+  if isPresent {
+    if status == -1 {
+      return vhost, true, false
+    } else if status == 0 {
+      return vhost, false, false
+    }
+  }
+
+  return vhost, true, true
+}
+
+func findNetwork (config logConfig, ip string) (string, bool, bool, string) {
   var ipaddr net.IP
 
   // if the ip is actually a hostname then look it up (if in bu.edu)
@@ -109,9 +146,9 @@ func findNetwork (ipranges []network, ip string) (string, bool, bool, string) {
     return ip, false, false, "outsideBUDNS" 
   }
 
-  for _, item := range ipranges {
+  for _, item := range config.ipranges {
     //fmt.Printf("item=%+v\n", item)
-    if item.net.Contains(ipaddr) {
+    if item.net != nil && item.net.Contains(ipaddr) {
       return ipaddr.String(), item.trackHosts, item.trackURI, item.name
     }
   }
@@ -139,8 +176,8 @@ func trackEntryItem (tracking map[string]trackedData, label string, ip string , 
   }
 }
 
-func trackEntry (ipranges []network, tracking trackedOverall, entry map[string]string ) {
-  ip, trackHosts, trackURI, label := findNetwork(ipranges, entry["ip"])
+func trackEntry (config logConfig, tracking trackedOverall, entry map[string]string ) {
+  ip, trackHosts, trackURI, label := findNetwork(config, entry["ip"])
 
   // first we determine which virtual host we have and get its data
   virtual := entry["virtual"]
@@ -151,6 +188,7 @@ func trackEntry (ipranges []network, tracking trackedOverall, entry map[string]s
     tracking[virtual] = element
   }
 
+  // now we check what the virtual host wants us to do
   trackEntryItem(element.networks, label, ip, entry["base_uri"], trackHosts, trackURI)
 }
 
