@@ -23,11 +23,13 @@ type trackedData struct {
   trackURI bool
 }
 
-type trackedOverall struct {
+type trackedInfo struct {
   number int
   networks map[string]trackedData
   sites map[string]trackedData
 }
+
+type trackedOverall map[string]trackedInfo
 
 type network struct {
   name string
@@ -124,9 +126,7 @@ func trackEntryItem (tracking map[string]trackedData, label string, ip string , 
   if isPresent {
     //fmt.Printf("element already present for %s\n", label)
   } else {
-    host := make(map[string]int)
-    base_uri := make(map[string]int)
-    tracking[label] = trackedData{ 0, host, base_uri, trackHosts, trackURI }
+    tracking[label] = initTrackedData(trackHosts, trackURI)
     element = tracking[label]
   }
 
@@ -142,7 +142,16 @@ func trackEntryItem (tracking map[string]trackedData, label string, ip string , 
 func trackEntry (ipranges []network, tracking trackedOverall, entry map[string]string ) {
   ip, trackHosts, trackURI, label := findNetwork(ipranges, entry["ip"])
 
-  trackEntryItem(tracking.networks, label, ip, entry["base_uri"], trackHosts, trackURI)
+  // first we determine which virtual host we have and get its data
+  virtual := entry["virtual"]
+  element, isPresent := tracking[virtual]
+  if isPresent {
+  } else {
+    element = initTrackedInfo()
+    tracking[virtual] = element
+  }
+
+  trackEntryItem(element.networks, label, ip, entry["base_uri"], trackHosts, trackURI)
 }
 
 type keyValue struct {
@@ -200,7 +209,9 @@ func dumpTrackedData (label string, tracking map[string]trackedData) {
 
 func dumpTracked (tracking trackedOverall) {
 
-  dumpTrackedData("network", tracking.networks)
+  for k, v := range tracking {
+    dumpTrackedData(k+"-network", v.networks)
+  }
 
 }
 
@@ -388,10 +399,21 @@ func ParseAccess (lineno int, line string) (map[string]string) {
   return entry
 }
 
-func initTrackedData () (trackedOverall) {
+func initTrackedData (trackHosts, trackURI bool) (trackedData) {
+  host := make(map[string]int)
+  base_uri := make(map[string]int)
+  return trackedData{ 0, host, base_uri, trackHosts, trackURI }
+}
+
+func initTrackedInfo () (trackedInfo) {
   networks := make(map[string]trackedData)
   sites := make(map[string]trackedData)
-  return trackedOverall{ 0, networks, sites }
+  return trackedInfo{ 0, networks, sites }
+}
+
+func initTrackedOverall () (trackedOverall) {
+  vhosts := make(trackedOverall)
+  return vhosts
 }
 
 func main() {
@@ -402,7 +424,7 @@ func main() {
   //tracking := make(map[string]trackedData)
   number := 0
   scanner := bufio.NewScanner(os.Stdin)
-  tracking := initTrackedData()
+  tracking := initTrackedOverall()
 
   for scanner.Scan() {
     line := scanner.Text()
