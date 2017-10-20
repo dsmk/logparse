@@ -1,4 +1,7 @@
 [
+  { "virtual": "128.197.226.205", "note": "Rapid 7 talking directly to lab F5?" },
+  { "virtual": "128.197.226.204", "note": "Rapid 7 talking directly to lab F5?" },
+
   { "name": "webproxy:wp-app-prod101", "net": "10.241.225.108/32", "track": "" },
   { "name": "webproxy:wp-app-prod102", "net": "10.241.225.109/32", "track": "" },
   { "name": "webproxy:wp-app-prod103", "net": "10.241.225.110/32", "track": "" },
@@ -12,6 +15,8 @@
 
   { "name": "ignore:F5-prod-1", "net": "10.231.9.92/32", "track": "" },
   { "name": "ignore:F5-prod-2", "net": "10.231.9.91/32", "track": "" },
+  { "name": "ignore:F5-lab-1", "net": "10.254.17.7/32", "track": "" },
+  { "name": "ignore:F5-lab-2", "net": "10.254.17.8/32", "track": "" },
 
   { "name": "unknown:zenoss", "net": "10.104.0.0/28", "track": "hosts,uri" },
 
