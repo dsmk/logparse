@@ -120,7 +120,7 @@ func findVirtual (config logConfig, vhost string) (string, bool, bool) {
     }
   }
 
-  return vhost, true, true
+  return vhost, false, true
 }
 
 func findNetwork (config logConfig, ip string) (string, bool, bool, string) {
@@ -179,17 +179,29 @@ func trackEntryItem (tracking map[string]trackedData, label string, ip string , 
 func trackEntry (config logConfig, tracking trackedOverall, entry map[string]string ) {
   ip, trackHosts, trackURI, label := findNetwork(config, entry["ip"])
 
-  // first we determine which virtual host we have and get its data
-  virtual := entry["virtual"]
-  element, isPresent := tracking[virtual]
-  if isPresent {
+  // now we check what the virtual host wants us to do
+  virtual, ignoreVHost, trackVHost := findVirtual(config, entry["virtual"])
+
+  //fmt.Printf("virtual=%s ignore=%b track=%b\n", entry["virtual"], ignoreVHost, trackVHost)
+
+  if ignoreVHost {
   } else {
-    element = initTrackedInfo()
-    tracking[virtual] = element
+    // first we determine which virtual host we have and get its data
+    element, isPresent := tracking[virtual]
+    if isPresent {
+    } else {
+      element = initTrackedInfo()
+      tracking[virtual] = element
+    }
+
+    // if track is false then override both the trackHosts and trackURI variables
+    if trackVHost {
+      trackEntryItem(element.networks, label, ip, entry["base_uri"], trackHosts, trackURI)
+    } else {
+      trackEntryItem(element.networks, label, ip, entry["base_uri"], false, false)
+    }
   }
 
-  // now we check what the virtual host wants us to do
-  trackEntryItem(element.networks, label, ip, entry["base_uri"], trackHosts, trackURI)
 }
 
 type keyValue struct {
