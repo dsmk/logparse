@@ -41,6 +41,7 @@ type network struct {
 type logConfig struct {
   ipranges []network
   vhosts map[string]int
+  sites map[string]int
 }
 
 // use ipcalc http://jodies.de/ipcalc to test the ranges
@@ -48,24 +49,43 @@ type logConfig struct {
 var alreadyIP = regexp.MustCompile(`^\d+\.\d+\.\d+\.\d+$`)
 var buDomain = regexp.MustCompile(`\.bu\.edu$`)
 
+// numberToArray (int) -> (ignoreItem, trackItems)
+func numberToArray (number int) (bool, bool) {
+  if number == -1 {
+    return true, false
+  } else if number == 0 {
+    return false, false
+  } else {
+    return false, true
+  }
+}
+
+func statusToNumber (status string) (int) {
+  if status == "ignore" {
+    return -1
+  } else if status == "summarize" {
+    return 0
+  } else {
+    return 1
+  }
+}
+
 func initIPRanges (data []map[string]string) (logConfig, error) {
 
   ipranges := make([]network, len(data))
   vhosts := make(map[string]int)
+  sites := make(map[string]int)
 
   for num, item := range data {
-    // if this contains a virtual keyword
-    virtual, isPresent := item["virtual"]
-    if isPresent {
+    virtual, vIsPresent := item["virtual"]
+    site, sIsPresent := item["site"]
+    if vIsPresent {
       // we need to add the virtual host to the list
-      status := 1
-      if item["status"] == "ignore" {
-        status = -1
-      } else if item["status"] == "summarize" {
-        status = 0
-      }
-      vhosts[virtual] = status
+      vhosts[virtual] = statusToNumber(item["status"])
 
+    } else if sIsPresent {
+      // record the site
+      sites[site] = statusToNumber(item["status"])
     } else {
       // we presume it is a network entry
       trackHosts := false
@@ -91,7 +111,7 @@ func initIPRanges (data []map[string]string) (logConfig, error) {
   }
 
   // now that we are done we need to build our structure
-  return logConfig{ ipranges, vhosts }, nil
+  return logConfig{ ipranges, vhosts, sites }, nil
 }
 
 func buildIPRanges (filename string) (logConfig, error) {
@@ -109,18 +129,15 @@ func buildIPRanges (filename string) (logConfig, error) {
   return initIPRanges (data)
 }
 
-func findVirtual (config logConfig, vhost string) (string, bool, bool) {
+func findVirtual (config logConfig, vhost string) (bool, bool) {
 
   status, isPresent := config.vhosts[vhost]
   if isPresent {
-    if status == -1 {
-      return vhost, true, false
-    } else if status == 0 {
-      return vhost, false, false
-    }
-  }
+    return numberToArray(status)
+  } 
 
-  return vhost, false, true
+  // default is to track all virtual hosts
+  return false, true
 }
 
 func findNetwork (config logConfig, ip string) (string, bool, bool, string) {
@@ -180,7 +197,8 @@ func trackEntry (config logConfig, tracking trackedOverall, entry map[string]str
   ip, trackHosts, trackURI, label := findNetwork(config, entry["ip"])
 
   // now we check what the virtual host wants us to do
-  virtual, ignoreVHost, trackVHost := findVirtual(config, entry["virtual"])
+  virtual := entry["virtual"]
+  ignoreVHost, trackVHost := findVirtual(config, entry["virtual"])
 
   //fmt.Printf("virtual=%s ignore=%b track=%b\n", entry["virtual"], ignoreVHost, trackVHost)
 
