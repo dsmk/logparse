@@ -129,6 +129,17 @@ func buildIPRanges (filename string) (logConfig, error) {
   return initIPRanges (data)
 }
 
+func findSite (config logConfig, site string) (bool, bool) {
+
+  status, isPresent := config.sites[site]
+  if isPresent {
+    return numberToArray(status)
+  } 
+
+  // default is to ignore most toplevels
+  return true, false
+}
+
 func findVirtual (config logConfig, vhost string) (bool, bool) {
 
   status, isPresent := config.vhosts[vhost]
@@ -197,8 +208,11 @@ func trackEntry (config logConfig, tracking trackedOverall, entry map[string]str
   ip, trackHosts, trackURI, label := findNetwork(config, entry["ip"])
 
   // now we check what the virtual host wants us to do
-  virtual := entry["virtual"]
-  ignoreVHost, trackVHost := findVirtual(config, entry["virtual"])
+  virtual, virtualExists := entry["virtual"]
+  if ! virtualExists {
+    virtual = "_default"
+  }
+  ignoreVHost, trackVHost := findVirtual(config, virtual)
 
   //fmt.Printf("virtual=%s ignore=%b track=%b\n", entry["virtual"], ignoreVHost, trackVHost)
 
@@ -219,6 +233,34 @@ func trackEntry (config logConfig, tracking trackedOverall, entry map[string]str
       trackEntryItem(element.networks, label, ip, entry["base_uri"], false, false)
     }
   }
+
+  // determine if this entry should be displayed
+  toplevel, tExists := entry["toplevel"]
+  if ! tExists {
+    toplevel = "_default"
+  }
+  ignoreSite, trackSite := findSite(config, toplevel)
+
+  fmt.Printf("site=%s ignore=%b track=%b config=%+v\n", toplevel,  ignoreSite, trackSite, config.sites)
+  
+  if ignoreSite {
+  } else {
+    element, isPresent := tracking[toplevel]
+    if isPresent {
+    } else {
+      element = initTrackedInfo()
+      tracking[toplevel] = element
+    }
+    fmt.Printf("site=%s element=%+v isPresent=%b\n", toplevel, element,  isPresent)
+
+    if trackSite {
+      fmt.Printf("tracking site=%s\n", toplevel)
+      trackEntryItem(element.sites, toplevel, ip, entry["base_uri"], ignoreSite, trackSite)
+    } else {
+      trackEntryItem(element.sites, toplevel, ip, entry["base_uri"], false, false)
+    }
+  }
+
 
 }
 
