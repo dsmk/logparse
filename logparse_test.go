@@ -8,6 +8,7 @@ var testIPData = []map[string]string {
   { "virtual": "testdomain1", "status": "ignore" },
   { "virtual": "testdomain2", "status": "track" },
   { "virtual": "testdomain3", "status": "summarize" },
+  { "site": "htbin", "status": "track" },
   { "name": "10net", "net": "10.0.0.0/8", "track": "hosts,uri" },
   { "name": "localhost", "net": "127.0.0.1/32", "track": "uri" },
 }
@@ -26,7 +27,7 @@ func TestInitIPRanges (t *testing.T) {
     return
   }
 
-  //t.Errorf("ipranges=%+v", config)
+  //t.Errorf("config=%+v", config)
   for num, item := range config.ipranges {
     t.Logf("item[%d]=%s name=%s -> %s", num, item, item.name, testIPData[num]["name"])
     if item.name != testIPData[num]["name"] {
