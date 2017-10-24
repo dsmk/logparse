@@ -29,7 +29,12 @@ type trackedInfo struct {
   sites map[string]trackedData
 }
 
-type trackedOverall map[string]trackedInfo
+type trackedOverall struct {
+  total int
+  onCampus int
+  offCampus int
+  tracked map[string]trackedInfo
+}
 
 type network struct {
   name string
@@ -216,6 +221,7 @@ func trackEntryItem (tracking map[string]trackedData, label string, ip string , 
     element = tracking[label]
   }
 
+  element.num_requests++
   element.base_uri["_total"]++
   if trackHosts {
     element.hosts[ip]++
@@ -227,8 +233,16 @@ func trackEntryItem (tracking map[string]trackedData, label string, ip string , 
   //fmt.Printf("trackEntryItem end element=%+v", element)
 }
 
-func trackEntry (config logConfig, tracking trackedOverall, entry map[string]string ) {
+func trackEntry (config logConfig, tracking *trackedOverall, entry map[string]string ) {
   ip, trackHosts, trackURI, label := findNetwork(config, entry["ip"])
+
+  // determine if we are on campus or off and record the bytes and number of requests
+  tracking.total++
+  if isOnCampus(entry["ip"]) {
+    tracking.onCampus++
+  } else {
+    tracking.offCampus++
+  }
 
   // now we check what the virtual host wants us to do
   virtual, virtualExists := entry["virtual"]
@@ -242,11 +256,11 @@ func trackEntry (config logConfig, tracking trackedOverall, entry map[string]str
   if ignoreVHost {
   } else {
     // first we determine which virtual host we have and get its data
-    element, isPresent := tracking[virtual]
+    element, isPresent := tracking.tracked[virtual]
     if isPresent {
     } else {
       element = initTrackedInfo()
-      tracking[virtual] = element
+      tracking.tracked[virtual] = element
     }
 
     // if track is false then override both the trackHosts and trackURI variables
@@ -332,8 +346,11 @@ func dumpTrackedData (label string, tracking map[string]trackedData) {
 }
 
 func dumpTracked (tracking trackedOverall) {
-
-  for k, v := range tracking {
+  total_requests := float64(tracking.onCampus + tracking.offCampus)
+  fmt.Printf("### Total requests: %d\n", tracking.total)
+  fmt.Printf("### On Campus: %11d (%.2f %%)\n", tracking.onCampus, 100*float64(tracking.onCampus)/total_requests)
+  fmt.Printf("### On Campus: %11d (%.2f %%)\n", tracking.offCampus, 100*float64(tracking.offCampus)/total_requests)
+  for k, v := range tracking.tracked {
     dumpTrackedData("network-"+k, v.networks)
     dumpTrackedData("sites-"+k, v.sites)
   }
@@ -537,8 +554,8 @@ func initTrackedInfo () (trackedInfo) {
 }
 
 func initTrackedOverall () (trackedOverall) {
-  vhosts := make(trackedOverall)
-  return vhosts
+  vhosts := make(map[string]trackedInfo)
+  return trackedOverall{ 0, 0, 0, vhosts }
 }
 
 func main() {
@@ -555,7 +572,7 @@ func main() {
     line := scanner.Text()
     entry := ParseAccess(number, line)
     if entry != nil {
-      trackEntry(ipranges, tracking, entry)
+      trackEntry(ipranges, &tracking, entry)
     } else {
       fmt.Printf("%d: parse line %s\n", number, line)
     }
@@ -572,7 +589,6 @@ func main() {
     os.Exit(1)
   }
 
-  fmt.Printf("\nTotal records: %d\n", number)
   dumpTracked(tracking)
 
 }
