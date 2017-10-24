@@ -87,11 +87,11 @@ func TestFindNetwork (t *testing.T) {
   //t.Errorf("Testing having a test fail %d\n", 1)
 }
 
-func testTrackStuff (t *testing.T, lines []string) (trackedOverall) {
+func testTrackStuff (t *testing.T, lines []string, numOnCampus int) (trackedOverall, error) {
   config, err := testIPRanges()
   if err != nil {
     t.Errorf("error=%+v", err)
-    return nil
+    return trackedOverall{}, err
   }
 
   tracking := initTrackedOverall()
@@ -100,7 +100,7 @@ func testTrackStuff (t *testing.T, lines []string) (trackedOverall) {
     entry := ParseAccess(number, line)
     //t.Logf("entry=%+v", entry)
     if entry != nil {
-      trackEntry(config, tracking, entry)
+      trackEntry(config, &tracking, entry)
     } else {
       t.Errorf("Error parsing line %d : %s", number, line)
     }
@@ -109,7 +109,12 @@ func testTrackStuff (t *testing.T, lines []string) (trackedOverall) {
 
   t.Logf("tracking=%+v", tracking)
 
-  return tracking
+  // check that we have the correct number of onCampus requests
+  if tracking.onCampus != numOnCampus {
+    t.Errorf("Incorrect number of onCampus requests afterwards (%d instead of %d)", tracking.onCampus, numOnCampus)
+  }
+
+  return tracking, nil
 }
 
 func TestHtbin10Net (t *testing.T) {
@@ -117,15 +122,15 @@ func TestHtbin10Net (t *testing.T) {
     `10.241.26.100 - - [01/Sep/2017:00:00:08 -0400] "GET /htbin/wp-includes/js/wp-embed.min.js?ver=4.6.6 HTTP/1.1" 200 1403 0.007192 0.000000 0.000000 "http://www.bu.edu/met/programs/graduate/arts-administration/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36" 10673 + WajbSArxHDYAACmxCSUAAAVW 128.197.26.35 off:http`,
   }
 
-  tracking := testTrackStuff(t, lines) 
+  tracking, err := testTrackStuff(t, lines, 1) 
 
-  if tracking == nil {
-    t.Errorf("empty tracking afterwards")
+  if err != nil {
+    t.Errorf("empty tracking afterwards: %+v", err)
   }
 
   //t.Errorf("tracking=%+v", tracking)
-  //t.Errorf("tracking[_default]=%+v", tracking["_default"])
-  vHostEntry, isPresent := tracking["_default"]
+  //t.Errorf("tracking[_default]=%+v", tracking.tracked["_default"])
+  vHostEntry, isPresent := tracking.tracked["_default"]
   if isPresent {
     //t.Errorf("isPresent: _total=%d len=%d\n", vHostEntry.networks["10net"].base_uri["_total"], len(lines))
 
@@ -154,15 +159,15 @@ func TestHtbinPublic (t *testing.T) {
     `100.241.26.100 - - [01/Sep/2017:00:00:08 -0400] "GET /htbin/wp-includes/js/wp-embed.min.js?ver=4.6.6 HTTP/1.1" 200 1403 0.007192 0.000000 0.000000 "http://www.bu.edu/met/programs/graduate/arts-administration/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36" 10673 + WajbSArxHDYAACmxCSUAAAVW 128.197.26.35 off:http`,
   }
 
-  tracking := testTrackStuff(t, lines) 
+  tracking, err := testTrackStuff(t, lines, 0) 
 
-  if tracking == nil {
-    t.Errorf("empty tracking afterwards")
+  if err != nil {
+    t.Errorf("empty tracking afterwards: %+v", err)
   }
 
   //t.Errorf("tracking=%+v", tracking)
   //t.Errorf("tracking[_default]=%+v", tracking["_default"])
-  vHostEntry, isPresent := tracking["_default"]
+  vHostEntry, isPresent := tracking.tracked["_default"]
   if isPresent {
     //t.Errorf("isPresent: _total=%d len=%d\n", vHostEntry.networks["10net"].base_uri["_total"], len(lines))
 
@@ -191,15 +196,15 @@ func TestRootPublic (t *testing.T) {
     `100.241.26.100 - - [01/Sep/2017:00:00:08 -0400] "GET / HTTP/1.1" 200 1403 0.007192 0.000000 0.000000 "http://www.bu.edu/met/programs/graduate/arts-administration/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36" 10673 + WajbSArxHDYAACmxCSUAAAVW 128.197.26.35 off:http`,
   }
 
-  tracking := testTrackStuff(t, lines) 
+  tracking, err := testTrackStuff(t, lines, 0) 
 
-  if tracking == nil {
-    t.Errorf("empty tracking afterwards")
+  if err != nil {
+    t.Errorf("empty tracking afterwards: %+v", err)
   }
 
   //t.Logf("tracking=%+v", tracking)
   //t.Errorf("tracking[_default]=%+v", tracking["_default"])
-  vHostEntry, isPresent := tracking["_default"]
+  vHostEntry, isPresent := tracking.tracked["_default"]
   if isPresent {
     //t.Errorf("isPresent: _total=%d len=%d\n", vHostEntry.networks["10net"].base_uri["_total"], len(lines))
 
@@ -225,15 +230,15 @@ func TestRoot10Net (t *testing.T) {
     `10.241.26.100 - - [01/Sep/2017:00:00:08 -0400] "GET / HTTP/1.1" 200 1403 0.007192 0.000000 0.000000 "http://www.bu.edu/met/programs/graduate/arts-administration/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36" 10673 + WajbSArxHDYAACmxCSUAAAVW 128.197.26.35 off:http`,
   }
 
-  tracking := testTrackStuff(t, lines) 
+  tracking, err := testTrackStuff(t, lines, 1) 
 
-  if tracking == nil {
-    t.Errorf("empty tracking afterwards")
+  if err != nil {
+    t.Errorf("empty tracking afterwards: %+v", err)
   }
 
   //t.Logf("tracking=%+v", tracking)
   //t.Errorf("tracking[_default]=%+v", tracking["_default"])
-  vHostEntry, isPresent := tracking["_default"]
+  vHostEntry, isPresent := tracking.tracked["_default"]
   if isPresent {
     //t.Errorf("isPresent: _total=%d len=%d\n", vHostEntry.networks["10net"].base_uri["_total"], len(lines))
 
