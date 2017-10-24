@@ -188,6 +188,8 @@ func findNetwork (config logConfig, ip string) (string, bool, bool, string) {
 
 func trackEntryItem (tracking map[string]trackedData, label string, ip string , base_uri string, trackHosts bool, trackURI bool ) {
   element, isPresent := tracking[label]
+  //fmt.Printf("trackEntryItem(label=%s isPresent=%b hosts=%b uri=%b tracking=%+v\n", label, isPresent, trackHosts, trackURI, element)
+
   if isPresent {
     //fmt.Printf("element already present for %s\n", label)
   } else {
@@ -202,6 +204,8 @@ func trackEntryItem (tracking map[string]trackedData, label string, ip string , 
   if trackURI {
     element.base_uri[base_uri]++
   }
+
+  //fmt.Printf("trackEntryItem end element=%+v", element)
 }
 
 func trackEntry (config logConfig, tracking trackedOverall, entry map[string]string ) {
@@ -232,35 +236,26 @@ func trackEntry (config logConfig, tracking trackedOverall, entry map[string]str
     } else {
       trackEntryItem(element.networks, label, ip, entry["base_uri"], false, false)
     }
-  }
 
-  // determine if this entry should be displayed
-  toplevel, tExists := entry["toplevel"]
-  if ! tExists {
-    toplevel = "_default"
-  }
-  ignoreSite, trackSite := findSite(config, toplevel)
-
-  fmt.Printf("site=%s ignore=%b track=%b config=%+v\n", toplevel,  ignoreSite, trackSite, config.sites)
+    // next track the toplevel if it exists
+    toplevel, tExists := entry["toplevel"]
+    if ! tExists {
+      toplevel = "_default"
+    }
   
-  if ignoreSite {
-  } else {
-    element, isPresent := tracking[toplevel]
-    if isPresent {
-    } else {
-      element = initTrackedInfo()
-      tracking[toplevel] = element
-    }
-    fmt.Printf("site=%s element=%+v isPresent=%b\n", toplevel, element,  isPresent)
+    ignoreSite, trackSite := findSite(config, toplevel)
 
-    if trackSite {
-      fmt.Printf("tracking site=%s\n", toplevel)
-      trackEntryItem(element.sites, toplevel, ip, entry["base_uri"], ignoreSite, trackSite)
+    //fmt.Printf("site=%s ignore=%b track=%b config=%+v\n", toplevel,  ignoreSite, trackSite, config.sites)
+  
+    if ignoreSite {
     } else {
-      trackEntryItem(element.sites, toplevel, ip, entry["base_uri"], false, false)
+      if trackSite {
+        trackEntryItem(element.sites, toplevel, ip, entry["base_uri"], true, true)
+      } else {
+        trackEntryItem(element.sites, toplevel, ip, entry["base_uri"], false, false)
+      }
     }
   }
-
 
 }
 
