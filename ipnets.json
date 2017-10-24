@@ -2,6 +2,8 @@
   { "virtual": "128.197.226.205", "note": "Rapid 7 talking directly to lab F5?" },
   { "virtual": "128.197.226.204", "note": "Rapid 7 talking directly to lab F5?" },
 
+  { "site": "htbin", "status": "track", "note": "what do we still need from /htbin on Solaris front-ends?" },
+
   { "name": "webproxy:wp-app-prod101", "net": "10.241.225.108/32", "track": "" },
   { "name": "webproxy:wp-app-prod102", "net": "10.241.225.109/32", "track": "" },
   { "name": "webproxy:wp-app-prod103", "net": "10.241.225.110/32", "track": "" },
