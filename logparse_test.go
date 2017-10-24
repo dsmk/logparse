@@ -66,7 +66,7 @@ func testTrackStuff (t *testing.T, lines []string) (trackedOverall) {
   number := 0
   for _, line := range lines {
     entry := ParseAccess(number, line)
-    //t.Errorf("entry=%+v", entry)
+    //t.Logf("entry=%+v", entry)
     if entry != nil {
       trackEntry(config, tracking, entry)
     } else {
@@ -75,10 +75,12 @@ func testTrackStuff (t *testing.T, lines []string) (trackedOverall) {
     number++
   }
 
+  t.Logf("tracking=%+v", tracking)
+
   return tracking
 }
 
-func TestDefault10Net (t *testing.T) {
+func TestHtbin10Net (t *testing.T) {
   var lines = []string {
     `10.241.26.100 - - [01/Sep/2017:00:00:08 -0400] "GET /htbin/wp-includes/js/wp-embed.min.js?ver=4.6.6 HTTP/1.1" 200 1403 0.007192 0.000000 0.000000 "http://www.bu.edu/met/programs/graduate/arts-administration/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36" 10673 + WajbSArxHDYAACmxCSUAAAVW 128.197.26.35 off:http`,
   }
@@ -89,19 +91,132 @@ func TestDefault10Net (t *testing.T) {
     t.Errorf("empty tracking afterwards")
   }
 
-  t.Errorf("tracking=%+v", tracking)
+  //t.Errorf("tracking=%+v", tracking)
+  //t.Errorf("tracking[_default]=%+v", tracking["_default"])
   vHostEntry, isPresent := tracking["_default"]
   if isPresent {
+    //t.Errorf("isPresent: _total=%d len=%d\n", vHostEntry.networks["10net"].base_uri["_total"], len(lines))
+
     // double-check that we have the correct number of records in the 10net
     if vHostEntry.networks["10net"].base_uri["_total"] != len(lines) {
       t.Errorf("wrong number of entry: %d instead of %d", vHostEntry.networks["10net"].base_uri["_total"], len(lines))
     }
-    // ensure that we don't have a site entry
-    siteEntry, sIsPresent := vHostEntry.sites["met"]
-    t.Logf("site: entry=%+v isPresent=%b\n", siteEntry, sIsPresent)
+
+    // ensure that we have an htbin entry
+    //t.Errorf("site=%s data=%+v", "htbin", vHostEntry.sites)
+    siteEntry, sIsPresent := vHostEntry.sites["htbin"]
+    //t.Logf("site: entry=%+v isPresent=%b\n", siteEntry, sIsPresent)
     if sIsPresent {
-      t.Errorf("Should not have recorded entry for site (met): %+v", siteEntry)
+      t.Log("site htbin found: %+v", siteEntry)
+    } else {
+      t.Errorf("Should have entry for site htbin: %+v", vHostEntry.sites)
     }
+
+  } else {
+    t.Errorf("Did not have _default vhost")
+  }
+}
+
+func TestHtbinPublic (t *testing.T) {
+  var lines = []string {
+    `100.241.26.100 - - [01/Sep/2017:00:00:08 -0400] "GET /htbin/wp-includes/js/wp-embed.min.js?ver=4.6.6 HTTP/1.1" 200 1403 0.007192 0.000000 0.000000 "http://www.bu.edu/met/programs/graduate/arts-administration/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36" 10673 + WajbSArxHDYAACmxCSUAAAVW 128.197.26.35 off:http`,
+  }
+
+  tracking := testTrackStuff(t, lines) 
+
+  if tracking == nil {
+    t.Errorf("empty tracking afterwards")
+  }
+
+  //t.Errorf("tracking=%+v", tracking)
+  //t.Errorf("tracking[_default]=%+v", tracking["_default"])
+  vHostEntry, isPresent := tracking["_default"]
+  if isPresent {
+    //t.Errorf("isPresent: _total=%d len=%d\n", vHostEntry.networks["10net"].base_uri["_total"], len(lines))
+
+    // double-check that we have the correct number of records in the 10net
+    if vHostEntry.networks["10net"].base_uri["_total"] != 0 {
+      t.Errorf("wrong number of entry: %d instead of %d", vHostEntry.networks["10net"].base_uri["_total"], len(lines))
+    }
+
+    // ensure that we have an htbin entry
+    //t.Errorf("site=%s data=%+v", "htbin", vHostEntry.sites)
+    siteEntry, sIsPresent := vHostEntry.sites["htbin"]
+    //t.Logf("site: entry=%+v isPresent=%b\n", siteEntry, sIsPresent)
+    if sIsPresent {
+      t.Log("site htbin found: %+v", siteEntry)
+    } else {
+      t.Errorf("Should have entry for site htbin: %+v", vHostEntry.sites)
+    }
+
+  } else {
+    t.Errorf("Did not have _default vhost")
+  }
+}
+
+func TestRootPublic (t *testing.T) {
+  var lines = []string {
+    `100.241.26.100 - - [01/Sep/2017:00:00:08 -0400] "GET / HTTP/1.1" 200 1403 0.007192 0.000000 0.000000 "http://www.bu.edu/met/programs/graduate/arts-administration/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36" 10673 + WajbSArxHDYAACmxCSUAAAVW 128.197.26.35 off:http`,
+  }
+
+  tracking := testTrackStuff(t, lines) 
+
+  if tracking == nil {
+    t.Errorf("empty tracking afterwards")
+  }
+
+  //t.Logf("tracking=%+v", tracking)
+  //t.Errorf("tracking[_default]=%+v", tracking["_default"])
+  vHostEntry, isPresent := tracking["_default"]
+  if isPresent {
+    //t.Errorf("isPresent: _total=%d len=%d\n", vHostEntry.networks["10net"].base_uri["_total"], len(lines))
+
+    // double-check that we have the correct number of records in the 10net
+    if vHostEntry.networks["10net"].base_uri["_total"] != 0 {
+      t.Errorf("wrong number of entry: %d instead of %d", vHostEntry.networks["10net"].base_uri["_total"], len(lines))
+    }
+
+    // ensure that the sites hash is empty
+    if len(vHostEntry.sites) == 0 {
+      t.Log("sites map is empty")
+    } else {
+      t.Errorf("sites should be empty but it is %+v", vHostEntry.sites)
+    }
+
+  } else {
+    t.Errorf("Did not have _default vhost")
+  }
+}
+
+func TestRoot10Net (t *testing.T) {
+  var lines = []string {
+    `10.241.26.100 - - [01/Sep/2017:00:00:08 -0400] "GET / HTTP/1.1" 200 1403 0.007192 0.000000 0.000000 "http://www.bu.edu/met/programs/graduate/arts-administration/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36" 10673 + WajbSArxHDYAACmxCSUAAAVW 128.197.26.35 off:http`,
+  }
+
+  tracking := testTrackStuff(t, lines) 
+
+  if tracking == nil {
+    t.Errorf("empty tracking afterwards")
+  }
+
+  //t.Logf("tracking=%+v", tracking)
+  //t.Errorf("tracking[_default]=%+v", tracking["_default"])
+  vHostEntry, isPresent := tracking["_default"]
+  if isPresent {
+    //t.Errorf("isPresent: _total=%d len=%d\n", vHostEntry.networks["10net"].base_uri["_total"], len(lines))
+
+    // double-check that we have the correct number of records in the 10net
+    if vHostEntry.networks["10net"].base_uri["_total"] != len(lines) {
+      t.Errorf("wrong number of entry: %d instead of %d", vHostEntry.networks["10net"].base_uri["_total"], len(lines))
+    }
+
+    // ensure that the sites hash is empty
+    if len(vHostEntry.sites) == 0 {
+      t.Log("sites map is empty")
+    } else {
+      t.Errorf("sites should be empty but it is %+v", vHostEntry.sites)
+    }
+
   } else {
     t.Errorf("Did not have _default vhost")
   }
