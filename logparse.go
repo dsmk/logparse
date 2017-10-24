@@ -315,8 +315,8 @@ func dumpTrackedData (label string, tracking map[string]trackedData) {
 func dumpTracked (tracking trackedOverall) {
 
   for k, v := range tracking {
-    dumpTrackedData(k+"-network", v.networks)
-    dumpTrackedData(k+"-sites", v.sites)
+    dumpTrackedData("network-"+k, v.networks)
+    dumpTrackedData("sites-"+k, v.sites)
   }
 
 }
