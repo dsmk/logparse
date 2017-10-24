@@ -19,6 +19,38 @@ func testIPRanges () (logConfig, error) {
   return ipranges, err
 }
 
+func testIsOnCampus (t *testing.T, ip string, expected bool) {
+  config, err := testIPRanges()
+  t.Logf("config=%+v", config)
+  if err != nil {
+    t.Errorf("error=%+v", err)
+    return
+  }
+
+  got := isOnCampus(ip)
+  if got == expected {
+    t.Logf("isOnCampus(%s)=%b", ip, got)
+  } else {
+    t.Errorf("isOnCampus(%s)=%b instead of %b", ip, got, expected)
+  }
+}
+
+func TestIsOnCampus10Net (t *testing.T) {
+  testIsOnCampus(t, "10.10.10.10", true)
+}
+
+func TestIsOnCampus128197 (t *testing.T) {
+  testIsOnCampus(t, "128.197.20.40", true)
+}
+
+func TestIsOnCampus168122 (t *testing.T) {
+  testIsOnCampus(t, "168.122.20.40", true)
+}
+
+func TestIsOnCampusOffCampus (t *testing.T) {
+  testIsOnCampus(t, "100.240.100.100", false)
+}
+
 func TestInitIPRanges (t *testing.T) {
   config, err := testIPRanges()
 
