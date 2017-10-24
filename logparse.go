@@ -32,7 +32,9 @@ type trackedInfo struct {
 type trackedOverall struct {
   total int
   onCampus int
+  onCampusBytes int64
   offCampus int
+  offCampusBytes int64
   tracked map[string]trackedInfo
 }
 
@@ -237,11 +239,18 @@ func trackEntry (config logConfig, tracking *trackedOverall, entry map[string]st
   ip, trackHosts, trackURI, label := findNetwork(config, entry["ip"])
 
   // determine if we are on campus or off and record the bytes and number of requests
+  bytes, err := convertBytes(entry["size"])
+  if err != nil {
+    fmt.Printf("error parsing size: %s\n", err);
+  }
+
   tracking.total++
   if isOnCampus(entry["ip"]) {
     tracking.onCampus++
+    tracking.onCampusBytes += bytes
   } else {
     tracking.offCampus++
+    tracking.offCampusBytes += bytes
   }
 
   // now we check what the virtual host wants us to do
@@ -347,9 +356,14 @@ func dumpTrackedData (label string, tracking map[string]trackedData) {
 
 func dumpTracked (tracking trackedOverall) {
   total_requests := float64(tracking.onCampus + tracking.offCampus)
-  fmt.Printf("### Total requests: %d\n", tracking.total)
-  fmt.Printf("### On Campus: %11d (%.2f %%)\n", tracking.onCampus, 100*float64(tracking.onCampus)/total_requests)
-  fmt.Printf("### On Campus: %11d (%.2f %%)\n", tracking.offCampus, 100*float64(tracking.offCampus)/total_requests)
+  total_bytes := float64(tracking.onCampusBytes + tracking.offCampusBytes)
+  fmt.Printf("### Total requests: %d bytes=%f \n", tracking.total, total_bytes)
+  fmt.Printf("### On Campus: %11d (%.2f %%) kbytes= %d (%.2f %%)\n", 
+    tracking.onCampus, 100*float64(tracking.onCampus)/total_requests,
+    tracking.onCampusBytes/1024, 100*float64(tracking.onCampusBytes)/total_bytes)
+  fmt.Printf("### Off Campus: %11d (%.2f %%) kbytes= %d (%.2f %%)\n", 
+    tracking.offCampus, 100*float64(tracking.offCampus)/total_requests,
+    tracking.offCampusBytes/1024, 100*float64(tracking.offCampusBytes)/total_bytes)
   for k, v := range tracking.tracked {
     dumpTrackedData("network-"+k, v.networks)
     dumpTrackedData("sites-"+k, v.sites)
@@ -376,6 +390,19 @@ func SpaceThaw (input string) (string) {
 func DumpAccess (prefix string, entry map[string]string) {
   for k, v := range entry {
     fmt.Printf("%s[%s]=(%s)\n", prefix, k, v)
+  }
+}
+
+func convertBytes (bytes_s string) (int64, error) {
+  if bytes_s == "-" {
+    return 0, nil
+  } else {
+    bytes, err := strconv.ParseInt(bytes_s, 10, 64)
+    if err != nil {
+      //fmt.Printf("error parsing bytes(%s): %s\n", bytes_s, err);
+      return 0, err
+    }
+    return bytes, nil
   }
 }
 
@@ -555,7 +582,7 @@ func initTrackedInfo () (trackedInfo) {
 
 func initTrackedOverall () (trackedOverall) {
   vhosts := make(map[string]trackedInfo)
-  return trackedOverall{ 0, 0, 0, vhosts }
+  return trackedOverall{ 0, 0, 0, 0, 0, vhosts }
 }
 
 func main() {

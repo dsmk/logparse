@@ -87,7 +87,7 @@ func TestFindNetwork (t *testing.T) {
   //t.Errorf("Testing having a test fail %d\n", 1)
 }
 
-func testTrackStuff (t *testing.T, lines []string, numOnCampus int) (trackedOverall, error) {
+func testTrackStuff (t *testing.T, lines []string, numOnCampus int, bytesOnCampus int64) (trackedOverall, error) {
   config, err := testIPRanges()
   if err != nil {
     t.Errorf("error=%+v", err)
@@ -114,6 +114,10 @@ func testTrackStuff (t *testing.T, lines []string, numOnCampus int) (trackedOver
     t.Errorf("Incorrect number of onCampus requests afterwards (%d instead of %d)", tracking.onCampus, numOnCampus)
   }
 
+  if tracking.onCampusBytes != bytesOnCampus {
+    t.Errorf("Incorrect number of onCampus bytes afterwards (%d instead of %d)", tracking.onCampusBytes, bytesOnCampus)
+  }
+
   return tracking, nil
 }
 
@@ -122,7 +126,7 @@ func TestHtbin10Net (t *testing.T) {
     `10.241.26.100 - - [01/Sep/2017:00:00:08 -0400] "GET /htbin/wp-includes/js/wp-embed.min.js?ver=4.6.6 HTTP/1.1" 200 1403 0.007192 0.000000 0.000000 "http://www.bu.edu/met/programs/graduate/arts-administration/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36" 10673 + WajbSArxHDYAACmxCSUAAAVW 128.197.26.35 off:http`,
   }
 
-  tracking, err := testTrackStuff(t, lines, 1) 
+  tracking, err := testTrackStuff(t, lines, 1, 1403) 
 
   if err != nil {
     t.Errorf("empty tracking afterwards: %+v", err)
@@ -159,7 +163,7 @@ func TestHtbinPublic (t *testing.T) {
     `100.241.26.100 - - [01/Sep/2017:00:00:08 -0400] "GET /htbin/wp-includes/js/wp-embed.min.js?ver=4.6.6 HTTP/1.1" 200 1403 0.007192 0.000000 0.000000 "http://www.bu.edu/met/programs/graduate/arts-administration/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36" 10673 + WajbSArxHDYAACmxCSUAAAVW 128.197.26.35 off:http`,
   }
 
-  tracking, err := testTrackStuff(t, lines, 0) 
+  tracking, err := testTrackStuff(t, lines, 0, 0) 
 
   if err != nil {
     t.Errorf("empty tracking afterwards: %+v", err)
@@ -196,7 +200,7 @@ func TestRootPublic (t *testing.T) {
     `100.241.26.100 - - [01/Sep/2017:00:00:08 -0400] "GET / HTTP/1.1" 200 1403 0.007192 0.000000 0.000000 "http://www.bu.edu/met/programs/graduate/arts-administration/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36" 10673 + WajbSArxHDYAACmxCSUAAAVW 128.197.26.35 off:http`,
   }
 
-  tracking, err := testTrackStuff(t, lines, 0) 
+  tracking, err := testTrackStuff(t, lines, 0, 0) 
 
   if err != nil {
     t.Errorf("empty tracking afterwards: %+v", err)
@@ -230,7 +234,7 @@ func TestRoot10Net (t *testing.T) {
     `10.241.26.100 - - [01/Sep/2017:00:00:08 -0400] "GET / HTTP/1.1" 200 1403 0.007192 0.000000 0.000000 "http://www.bu.edu/met/programs/graduate/arts-administration/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36" 10673 + WajbSArxHDYAACmxCSUAAAVW 128.197.26.35 off:http`,
   }
 
-  tracking, err := testTrackStuff(t, lines, 1) 
+  tracking, err := testTrackStuff(t, lines, 1, 1403) 
 
   if err != nil {
     t.Errorf("empty tracking afterwards: %+v", err)
@@ -366,5 +370,32 @@ func TestW3VParseOK (t *testing.T) {
   testParseAccess(t, w3vParseOK, expected_elapsed, expect)
 
   //t.Errorf("returned %+v", item)
+}
+
+func testConvertBytes (t *testing.T, bytes_s string, expected int64, expect_error bool) {
+  bytes, err := convertBytes(bytes_s)
+  if err != nil {
+    if expect_error {
+      t.Logf("expected error: %s", err)
+    } else {
+      t.Errorf("unexpected error(%s): %s", bytes_s, err)
+    }
+  } else {
+    if bytes != expected {
+      t.Error("%s: expected %d and got %d", bytes_s, expected, bytes)
+    }
+  }
+}
+
+func TestZeroBytes (t *testing.T) {
+  testConvertBytes(t, "-", 0, false);
+}
+
+func TestNumberBytes (t *testing.T) {
+  testConvertBytes(t, "14500", 14500, false);
+}
+
+func TestErrorBytes (t *testing.T) {
+  testConvertBytes(t, "Z14500", 14500, true);
 }
 
