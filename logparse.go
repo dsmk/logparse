@@ -316,6 +316,7 @@ func dumpTracked (tracking trackedOverall) {
 
   for k, v := range tracking {
     dumpTrackedData(k+"-network", v.networks)
+    dumpTrackedData(k+"-sites", v.sites)
   }
 
 }
