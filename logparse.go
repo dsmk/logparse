@@ -393,11 +393,14 @@ func dumpTracked (tracking trackedOverall) {
 
 var whitespace = regexp.MustCompile(`\s+`)
 //var frozen_whitespace = regexp.MustCompile(`++++`)
-var quotes = regexp.MustCompile(`".*?[^\\]"`)
+
+var quotes = regexp.MustCompile(`"[^"]*?[^\\"]?"`)
+
 // get the top-level and second level names
 var parseLevels = regexp.MustCompile(`^/+([^/]+)?(/+)?([^/]+)?`)
 
 func SpaceFreeze (input string) (string) {
+  //fmt.Printf("SpaceFreeze: %s\n", input)
   output := whitespace.ReplaceAllLiteralString(input, "++++")
   return output
 }
