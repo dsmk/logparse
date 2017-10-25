@@ -394,7 +394,8 @@ func dumpTracked (tracking trackedOverall) {
 var whitespace = regexp.MustCompile(`\s+`)
 //var frozen_whitespace = regexp.MustCompile(`++++`)
 
-var quotes = regexp.MustCompile(`"[^"]*?[^\\"]?"`)
+var alldashes = regexp.MustCompile(`"-*"`)
+var quotes = regexp.MustCompile(`".*?[^\\]?"`)
 
 // get the top-level and second level names
 var parseLevels = regexp.MustCompile(`^/+([^/]+)?(/+)?([^/]+)?`)
@@ -460,7 +461,9 @@ func ParseAccess (lineno int, line string) (map[string]string) {
   //fmt.Printf("%d: first (%s)\n", lineno, line)
 
   // first we convert whitespace inside quotes into something else
-  quoted := quotes.ReplaceAllStringFunc(line, SpaceFreeze)
+  // clean up by making "" and "-" into -
+  quoted := alldashes.ReplaceAllString(line, "-")
+  quoted = quotes.ReplaceAllStringFunc(quoted, SpaceFreeze)
   elements := whitespace.Split(quoted, -1)
 
   if len(elements) < 17 {

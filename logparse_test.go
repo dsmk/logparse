@@ -377,7 +377,7 @@ func TestParseAccessBadRequest (t *testing.T) {
     "toplevel": "-error-",
     "base_uri": "baduri",
     "uri": "baduri",
-    "browser": `"-"`,
+    "browser": `-`,
     "protocol": `UNKNOWN`,
   }
 
