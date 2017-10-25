@@ -375,10 +375,27 @@ func TestParseAccessBadRequest (t *testing.T) {
   expect := map[string]string {
     "ip": "190.152.18.202",
     "toplevel": "-error-",
-    "base_uri": "baduri",
-    "uri": "baduri",
+    "base_uri": `"u"`,
+    "uri": `"u"`,
     "browser": `-`,
     "protocol": `UNKNOWN`,
+  }
+
+  testParseAccess(t, line, expected_elapsed, expect)
+
+  //t.Errorf("returned %+v", item)
+}
+
+func TestParseAccessBadRequest2 (t *testing.T) {
+  line := `84-201-133-72.spider.yandex.com - - [24/Aug/2017:17:02:18 -0400] "GET /research/wp-assets/articles/soil-fungus/images/videobg1.jpg\" HTTP/1.1" 404 8969 - - - "-" "Mozilla/5.0 (compatible; YandexBot/3.0; +http://yandex.com/bots)" 27129 + WZ8@2grxHD4AAGn5ksoAAAIQ 128.197.26.4 off:http`
+  expected_elapsed := 0.000
+  expect := map[string]string {
+    "ip": "84-201-133-72.spider.yandex.com",
+    "toplevel": "research",
+    "base_uri": `/research/wp-assets/articles/soil-fungus/images/videobg1.jpg&quot;`,
+    "uri": `/research/wp-assets/articles/soil-fungus/images/videobg1.jpg&quot;`,
+    "browser": `"Mozilla/5.0 (compatible; YandexBot/3.0; +http://yandex.com/bots)"`,
+    "protocol": `HTTP/1.1`,
   }
 
   testParseAccess(t, line, expected_elapsed, expect)

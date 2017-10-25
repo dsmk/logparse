@@ -441,6 +441,8 @@ func ConvertElapsed (elapsed_s string) (float64, error) {
       elapsed = elapsed / 1000000
       return elapsed, nil
     }
+  } else if elapsed_s == "-" {
+    return 0.0, nil
   } else {
     // single float number - that is the time in seconds
     elapsed, err := strconv.ParseFloat(elapsed_s, 64)
@@ -461,8 +463,9 @@ func ParseAccess (lineno int, line string) (map[string]string) {
   //fmt.Printf("%d: first (%s)\n", lineno, line)
 
   // first we convert whitespace inside quotes into something else
-  // clean up by making "" and "-" into -
+  // clean up by making "" and "-" into - and converting \" into something else
   quoted := alldashes.ReplaceAllString(line, "-")
+  quoted = strings.Replace(quoted, `\"`, "&quot;", -1)
   quoted = quotes.ReplaceAllStringFunc(quoted, SpaceFreeze)
   elements := whitespace.Split(quoted, -1)
 
@@ -485,11 +488,12 @@ func ParseAccess (lineno int, line string) (map[string]string) {
     request_elements = whitespace.Split(request_line, -1)
   } else {
     request_elements = whitespace.Split(`"UNKNOWN baduri UNKNOWN"`, -1)
-    fmt.Printf("request_line error only a garbage string: (%s)\n", request_line)
-    fmt.Printf("  quoted=(%s)\n", quoted)
-    for index := 0; index < len(elements) ; index++ {
-      fmt.Printf("       element[%d]=(%s)\n", index, elements[index])
-    }
+    request_elements[1] = request_line
+    //fmt.Printf("request_line error only a garbage string: (%s)\n", request_line)
+    //fmt.Printf("  quoted=(%s)\n", quoted)
+    //for index := 0; index < len(elements) ; index++ {
+    //  fmt.Printf("       element[%d]=(%s)\n", index, elements[index])
+    //}
   }
 
   if len(request_elements) > 0 {
