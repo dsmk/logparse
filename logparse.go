@@ -464,8 +464,8 @@ func ParseAccess (lineno int, line string) (map[string]string) {
 
   // first we convert whitespace inside quotes into something else
   // clean up by making "" and "-" into - and converting \" into something else
-  quoted := alldashes.ReplaceAllString(line, "-")
-  quoted = strings.Replace(quoted, `\"`, "&quot;", -1)
+  quoted := strings.Replace(line, `\"`, "&quot;", -1)
+  quoted = alldashes.ReplaceAllString(quoted, "-")
   quoted = quotes.ReplaceAllStringFunc(quoted, SpaceFreeze)
   elements := whitespace.Split(quoted, -1)
 
@@ -480,8 +480,9 @@ func ParseAccess (lineno int, line string) (map[string]string) {
   fmt.Printf("========= number=%d\n", len(elements))
   for index := 0; index < len(elements) ; index++ {
     fmt.Printf("  element[%d]=(%s)\n", index, elements[index])
-  }
+  } 
   */
+  
   request_line := SpaceThaw(elements[5])
   
   if strings.Contains(request_line, " ") {
