@@ -634,7 +634,7 @@ func main() {
       fmt.Printf("%d: parse line %s\n", number, line)
     }
 
-    if number % 100000 == 0 {
+    if number % 500000 == 0 {
       t := time.Now()
       fmt.Printf("processed=%d (%s)\n", number, t.Format("20060102150405"))
     }
