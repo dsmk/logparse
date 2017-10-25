@@ -77,17 +77,17 @@ func statusToNumber (status string) (int) {
   }
 }
 
-var onCampusIPs = []string { "10.0.0.0/8", "128.197.0.0/16", "168.122.0.0/16" }
+// we do this format for performance
+var onCampusIPs = []*net.IPNet {
+  &net.IPNet{ IP: net.IPv4(10,0,0,0), Mask: net.IPv4Mask(255,0,0,0) },
+  &net.IPNet{ IP: net.IPv4(128,197,0,0), Mask: net.IPv4Mask(255,255,0,0) },
+  &net.IPNet{ IP: net.IPv4(168,122,0,0), Mask: net.IPv4Mask(255,255,0,0) },
+}
 
 func isOnCampus (ip string) (bool) {
   ipaddr := net.ParseIP(ip)
 
-  for _, item := range onCampusIPs {
-    _, ipnet, err := net.ParseCIDR(item)
-    if err != nil {
-      return false
-    }
-
+  for _, ipnet := range onCampusIPs {
     if ipnet.Contains(ipaddr) {
       return true
     }
