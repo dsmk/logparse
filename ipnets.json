@@ -1,4 +1,9 @@
 [
+  { "name": "ignore:F5-prod-1", "net": "10.231.9.92/32", "ignore": "yes" },
+  { "name": "ignore:F5-prod-2", "net": "10.231.9.91/32", "ignore": "yes" },
+  { "name": "ignore:F5-lab-1", "net": "10.254.17.7/32", "ignore": "yes" },
+  { "name": "ignore:F5-lab-2", "net": "10.254.17.8/32", "ignore": "yes" },
+
   { "virtual": "128.197.226.205", "note": "Rapid 7 talking directly to lab F5?" },
   { "virtual": "128.197.226.204", "note": "Rapid 7 talking directly to lab F5?" },
 
@@ -14,11 +19,6 @@
   { "name": "webproxy:wp-app-devl01", "net": "10.241.225.101/32", "track": "" },
   { "name": "webproxy:wp-app-test01", "net": "10.241.225.103/32", "track": "" },
   { "name": "webproxy:wp-app-test02", "net": "10.241.225.104/32", "track": "" },
-
-  { "name": "ignore:F5-prod-1", "net": "10.231.9.92/32", "track": "" },
-  { "name": "ignore:F5-prod-2", "net": "10.231.9.91/32", "track": "" },
-  { "name": "ignore:F5-lab-1", "net": "10.254.17.7/32", "track": "" },
-  { "name": "ignore:F5-lab-2", "net": "10.254.17.8/32", "track": "" },
 
   { "name": "unknown:zenoss", "net": "10.104.0.0/28", "track": "hosts,uri" },
 
