@@ -9,6 +9,7 @@ var testIPData = []map[string]string {
   { "virtual": "testdomain2", "status": "track" },
   { "virtual": "testdomain3", "status": "summarize" },
   { "site": "htbin", "status": "track" },
+  { "name": "ignore:F5-1", "net": "10.231.9.92/32", "ignore": "true" },
   { "name": "10net", "net": "10.0.0.0/8", "track": "hosts,uri" },
   { "name": "localhost", "net": "127.0.0.1/32", "track": "uri" },
 }
@@ -76,13 +77,13 @@ func TestFindNetwork (t *testing.T) {
     return
   }
 
-  ip, trackH, trackU, name := findNetwork(config, "10.0.0.1")
+  ip, trackH, trackU, ignore, name := findNetwork(config, "10.0.0.1")
 
   if ip != "10.0.0.1" {
     t.Errorf("test ip != 10.0.0.1")
   }
   if name != "10net" {
-    t.Errorf("test range == %s, %b, %b, %s", ip, trackH, trackU, name)
+    t.Errorf("test range == %s, %b, %b, %b, %s", ip, trackH, trackU, ignore, name)
   }
   //t.Errorf("Testing having a test fail %d\n", 1)
 }
@@ -156,6 +157,25 @@ func TestHtbin10Net (t *testing.T) {
   } else {
     t.Errorf("Did not have _default vhost")
   }
+}
+
+func TestIgnore (t *testing.T) {
+  var lines = []string {
+    `10.231.9.92 - - [01/Sep/2017:00:00:08 -0400] "GET /htbin/wp-includes/js/wp-embed.min.js?ver=4.6.6 HTTP/1.1" 200 1403 0.007192 0.000000 0.000000 "http://www.bu.edu/met/programs/graduate/arts-administration/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36" 10673 + WajbSArxHDYAACmxCSUAAAVW 128.197.26.35 off:http`,
+  }
+
+  tracking, err := testTrackStuff(t, lines, 0, 0) 
+
+  if err != nil {
+    t.Errorf("empty tracking afterwards: %+v", err)
+  }
+
+  //t.Errorf("tracking=%+v", tracking)
+  //t.Errorf("tracking[_default]=%+v", tracking["_default"])
+  _, isPresent := tracking.tracked["_default"]
+  if isPresent {
+    t.Errorf("Ignored IP should not generate a _default vhost since it is skipped")
+  } 
 }
 
 func TestHtbinPublic (t *testing.T) {

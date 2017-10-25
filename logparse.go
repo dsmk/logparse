@@ -43,6 +43,7 @@ type network struct {
   net *net.IPNet
   trackHosts bool
   trackURI bool
+  ignore bool
 }
 
 type logConfig struct {
@@ -125,13 +126,16 @@ func initIPRanges (data []map[string]string) (logConfig, error) {
         trackURI = true
       }
 
+      // determine if we want to ignore the network (does nothing other than add to the total
+      _, ignore := item["ignore"]
+
       // parse the cidr into Go's internal form
       _, ipnet, err := net.ParseCIDR(item["net"])
       if err != nil {
         return logConfig{}, err
       }
 
-      ipranges[num] = network{ item["name"], ipnet, trackHosts, trackURI } 
+      ipranges[num] = network{ item["name"], ipnet, trackHosts, trackURI, ignore } 
     }
 
   }
@@ -177,7 +181,7 @@ func findVirtual (config logConfig, vhost string) (bool, bool) {
   return false, true
 }
 
-func findNetwork (config logConfig, ip string) (string, bool, bool, string) {
+func findNetwork (config logConfig, ip string) (string, bool, bool, bool, string) {
   var ipaddr net.IP
 
   // if the ip is actually a hostname then look it up (if in bu.edu)
@@ -193,22 +197,22 @@ func findNetwork (config logConfig, ip string) (string, bool, bool, string) {
       ipaddr = ips[0]
     } else {
       //fmt.Printf("error looking up %s : %s\n", ip, err)
-      return "unknownDNS", true, false, "error"
+      return "unknownDNS", true, false, false, "error"
     }
   } else {
     // skip everything else
-    return ip, false, false, "outsideBUDNS" 
+    return ip, false, false, false, "outsideBUDNS" 
   }
 
   for _, item := range config.ipranges {
     //fmt.Printf("item=%+v\n", item)
     if item.net != nil && item.net.Contains(ipaddr) {
-      return ipaddr.String(), item.trackHosts, item.trackURI, item.name
+      return ipaddr.String(), item.trackHosts, item.trackURI, item.ignore, item.name
     }
   }
 
   // otherwise return our default values
-  return ipaddr.String(), false, false, "default"
+  return ipaddr.String(), false, false, false, "default"
 }
 
 
@@ -236,7 +240,15 @@ func trackEntryItem (tracking map[string]trackedData, label string, ip string , 
 }
 
 func trackEntry (config logConfig, tracking *trackedOverall, entry map[string]string ) {
-  ip, trackHosts, trackURI, label := findNetwork(config, entry["ip"])
+  ip, trackHosts, trackURI, ignore, label := findNetwork(config, entry["ip"])
+
+  // always increment the total counter
+  tracking.total++
+
+  // if we are to ignore this entry then skip it
+  if ignore {
+    return
+  }
 
   // determine if we are on campus or off and record the bytes and number of requests
   bytes, err := convertBytes(entry["size"])
@@ -244,7 +256,6 @@ func trackEntry (config logConfig, tracking *trackedOverall, entry map[string]st
     fmt.Printf("error parsing size: %s\n", err);
   }
 
-  tracking.total++
   if isOnCampus(entry["ip"]) {
     tracking.onCampus++
     tracking.onCampusBytes += bytes
