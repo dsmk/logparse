@@ -31,6 +31,7 @@ type trackedInfo struct {
 
 type trackedOverall struct {
   total int
+  totalBytes int64
   onCampus int
   onCampusBytes int64
   offCampus int
@@ -242,8 +243,14 @@ func trackEntryItem (tracking map[string]trackedData, label string, ip string , 
 func trackEntry (config logConfig, tracking *trackedOverall, entry map[string]string ) {
   ip, trackHosts, trackURI, ignore, label := findNetwork(config, entry["ip"])
 
+  bytes, err := convertBytes(entry["size"])
+  if err != nil {
+    fmt.Printf("error parsing size: %s\n", err);
+  }
+
   // always increment the total counter
   tracking.total++
+  tracking.totalBytes += bytes
 
   // if we are to ignore this entry then skip it
   if ignore {
@@ -251,11 +258,6 @@ func trackEntry (config logConfig, tracking *trackedOverall, entry map[string]st
   }
 
   // determine if we are on campus or off and record the bytes and number of requests
-  bytes, err := convertBytes(entry["size"])
-  if err != nil {
-    fmt.Printf("error parsing size: %s\n", err);
-  }
-
   if isOnCampus(entry["ip"]) {
     tracking.onCampus++
     tracking.onCampusBytes += bytes
@@ -366,8 +368,11 @@ func dumpTrackedData (label string, tracking map[string]trackedData) {
 }
 
 func dumpTracked (tracking trackedOverall) {
-  total_requests := float64(tracking.onCampus + tracking.offCampus)
-  total_bytes := float64(tracking.onCampusBytes + tracking.offCampusBytes)
+  total_requests := float64(tracking.total)
+  total_bytes := float64(tracking.totalBytes)
+  ignored_requests := tracking.total - tracking.onCampus - tracking.offCampus
+  ignored_bytes := tracking.totalBytes - tracking.onCampusBytes - tracking.offCampusBytes
+
   fmt.Printf("### Total requests: %d bytes=%f \n", tracking.total, total_bytes)
   fmt.Printf("### On Campus: %11d (%.2f %%) kbytes= %d (%.2f %%)\n", 
     tracking.onCampus, 100*float64(tracking.onCampus)/total_requests,
@@ -375,6 +380,10 @@ func dumpTracked (tracking trackedOverall) {
   fmt.Printf("### Off Campus: %11d (%.2f %%) kbytes= %d (%.2f %%)\n", 
     tracking.offCampus, 100*float64(tracking.offCampus)/total_requests,
     tracking.offCampusBytes/1024, 100*float64(tracking.offCampusBytes)/total_bytes)
+  fmt.Printf("### Ignored: %11d (%.2f %%) kbytes= %d (%.2f %%)\n", 
+    ignored_requests, 100*float64(ignored_requests)/total_requests,
+    ignored_bytes/1024, 100*float64(ignored_bytes)/total_bytes)
+
   for k, v := range tracking.tracked {
     dumpTrackedData("network-"+k, v.networks)
     dumpTrackedData("sites-"+k, v.sites)
@@ -593,7 +602,7 @@ func initTrackedInfo () (trackedInfo) {
 
 func initTrackedOverall () (trackedOverall) {
   vhosts := make(map[string]trackedInfo)
-  return trackedOverall{ 0, 0, 0, 0, 0, vhosts }
+  return trackedOverall{ tracked: vhosts }
 }
 
 func main() {
