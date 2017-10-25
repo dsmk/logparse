@@ -20,17 +20,30 @@
   { "name": "webproxy:wp-app-test01", "net": "10.241.225.103/32", "track": "" },
   { "name": "webproxy:wp-app-test02", "net": "10.241.225.104/32", "track": "" },
 
+  { "name": "webproxy:wp-assets-syst01", "net": "10.241.225.88/32", "track": "" },
+  { "name": "webproxy:wp-assets-syst02", "net": "10.241.225.89/32", "track": "" },
+  { "name": "webproxy:wp-assets-devl01", "net": "10.241.225.102/32", "track": "" },
+  { "name": "webproxy:wp-assets-test01", "net": "10.241.225.105/32", "track": "" },
+  { "name": "webproxy:wp-assets-test02", "net": "10.241.225.106/32", "track": "" },
+  { "name": "webproxy:wp-assets-prod01", "net": "10.241.225.112/32", "track": "" },
+  { "name": "webproxy:wp-assets-prod02", "net": "10.241.225.113/32", "track": "" },
+
+  { "name": "webproxy:usoftware56", "net": "10.241.225.34/32", "track": "" },
+  { "name": "webproxy:usoftware70", "net": "10.241.225.48/32", "track": "" },
+
+  { "name": "webproxy:ist-webacct-db-qa01", "net": "10.231.6.20/32", "track": "" },
+
   { "name": "unknown:zenoss", "net": "10.104.0.0/28", "track": "hosts,uri" },
 
   { "name": "unknown:VDI-pilot-INC12111778", "net": "10.57.246.0/23", "track": "hosts,uri" },
   { "name": "unknown:MET-VDI-INC11958314", "net": "10.60.0.0/26", "track": "hosts,uri" },
   { "name": "unknown:Questrom-VCloud-INC11829734", "net": "10.241.200.64/26", "track": "hosts,uri" },
-  { "name": "unknown:Isilon", "net": "10.232.15.0/24", "track": "hosts,uri" },
+  { "name": "unknown:Isilon-alternate-IP", "net": "10.232.15.0/24", "track": "hosts" },
 
   { "name": "unknown:BUMC-VPN?", "net": "10.224.162.0/23", "track": "hosts,uri" },
 
-  { "name": "unknown:IST-solaris-26net", "net": "10.241.26.0/24", "track": "hosts,uri" },
-  { "name": "unknown:IST-solaris-28net", "net": "10.241.26.0/24", "track": "hosts,uri" },
+  { "name": "move2weblogin:IST-solaris-26net", "net": "10.241.26.0/24", "track": "hosts,uri" },
+  { "name": "move2weblogin:IST-solaris-28net", "net": "10.241.28.0/24", "track": "hosts,uri" },
 
   { "name": "unknown:IST-privnet", "net": "10.231.9.0/24", "track": "hosts,uri" },
   { "name": "unknown:IST-privnet", "net": "10.231.8.0/24", "track": "hosts,uri" },
