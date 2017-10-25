@@ -373,14 +373,14 @@ func dumpTracked (tracking trackedOverall) {
   ignored_requests := tracking.total - tracking.onCampus - tracking.offCampus
   ignored_bytes := tracking.totalBytes - tracking.onCampusBytes - tracking.offCampusBytes
 
-  fmt.Printf("### Total requests: %d bytes=%f \n", tracking.total, total_bytes)
-  fmt.Printf("### On Campus: %11d (%.2f %%) kbytes= %d (%.2f %%)\n", 
+  fmt.Printf("### Total requests= %d kbytes=%.2f \n", tracking.total, total_bytes/1024)
+  fmt.Printf("### On Campus: requests= %d (%.2f %%) kbytes= %d (%.2f %%)\n", 
     tracking.onCampus, 100*float64(tracking.onCampus)/total_requests,
     tracking.onCampusBytes/1024, 100*float64(tracking.onCampusBytes)/total_bytes)
-  fmt.Printf("### Off Campus: %11d (%.2f %%) kbytes= %d (%.2f %%)\n", 
+  fmt.Printf("### Off Campus: requests= %d (%.2f %%) kbytes= %d (%.2f %%)\n", 
     tracking.offCampus, 100*float64(tracking.offCampus)/total_requests,
     tracking.offCampusBytes/1024, 100*float64(tracking.offCampusBytes)/total_bytes)
-  fmt.Printf("### Ignored: %11d (%.2f %%) kbytes= %d (%.2f %%)\n", 
+  fmt.Printf("### Ignored: requests= %d (%.2f %%) kbytes= %d (%.2f %%)\n", 
     ignored_requests, 100*float64(ignored_requests)/total_requests,
     ignored_bytes/1024, 100*float64(ignored_bytes)/total_bytes)
 
