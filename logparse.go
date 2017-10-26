@@ -98,6 +98,45 @@ func isOnCampus (ip string) (bool) {
   return false
 }
 
+// simple routine to add commas to numbers (based on https://play.golang.org/p/fkg7FsquII)
+func addCommaToInt (num int) (string) {
+  return addCommaToInt64(int64(num))
+}
+
+func addCommaToInt64 (num int64) (string) {
+  str := strconv.FormatInt(num, 10)
+
+  startOffset := 0
+  if num < 0 {
+    startOffset = 1
+  }
+
+  const groupLen = 3
+
+  groups := (len(str) - startOffset - 1) / groupLen
+
+  if groups == 0 {
+    return str
+  }
+
+  buf := make([]byte, groups + len(str))
+
+  startOffset += groupLen
+  p := len(str)
+  q := len(buf)
+  for p > startOffset {
+    p -= groupLen
+    q -= groupLen
+    copy(buf[q:q+groupLen], str[p:])
+    q -= 1
+    copy(buf[q:], ",")
+  }
+  if q > 0 {
+    copy(buf[:q], str)
+  }
+  return string(buf)
+}
+
 func initIPRanges (data []map[string]string) (logConfig, error) {
 
   ipranges := make([]network, len(data))

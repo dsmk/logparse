@@ -52,6 +52,72 @@ func TestIsOnCampusOffCampus (t *testing.T) {
   testIsOnCampus(t, "100.240.100.100", false)
 }
 
+var testCommaInt = []struct {
+  num int
+  expected string
+} {
+  { 1, "1" },
+  { -1, "-1" },
+  { 431, "431" },
+  { -321, "-321" },
+  { 1234, "1,234" },
+  { -1234, "-1,234" },
+  { 12345, "12,345" },
+  { -12345, "-12,345" },
+  { 123456, "123,456" },
+  { -123456, "-123,456" },
+  { 1234567, "1,234,567" },
+  { -1234567, "-1,234,567" },
+  { 12345678, "12,345,678" },
+  { -12345678, "-12,345,678" },
+  { 123456789, "123,456,789" },
+  { -123456789, "-123,456,789" },
+  { 1234567890, "1,234,567,890" },
+  { -1234567890, "-1,234,567,890" },
+}
+
+func TestCommasInt (t *testing.T) {
+  for _, tt := range testCommaInt {
+    result := addCommaToInt(tt.num)
+    if result != tt.expected {
+      t.Errorf("addCommaToInt(%d): expected=%s got=%s", tt.num, tt.expected, result)
+    }
+  }
+}
+
+var testCommaInt64 = []struct {
+  num int64
+  expected string
+} {
+  { 1, "1" },
+  { -1, "-1" },
+  { 431, "431" },
+  { -321, "-321" },
+  { 1234, "1,234" },
+  { -1234, "-1,234" },
+  { 12345, "12,345" },
+  { -12345, "-12,345" },
+  { 123456, "123,456" },
+  { -123456, "-123,456" },
+  { 1234567, "1,234,567" },
+  { -1234567, "-1,234,567" },
+  { 12345678, "12,345,678" },
+  { -12345678, "-12,345,678" },
+  { 123456789, "123,456,789" },
+  { -123456789, "-123,456,789" },
+  { 1234567890, "1,234,567,890" },
+  { -1234567890, "-1,234,567,890" },
+}
+
+func TestCommasInt64 (t *testing.T) {
+  for _, tt := range testCommaInt64 {
+    result := addCommaToInt64(tt.num)
+    if result != tt.expected {
+      t.Errorf("addCommaToInt64(%d): expected=%s got=%s", tt.num, tt.expected, result)
+    }
+  }
+}
+
 func TestInitIPRanges (t *testing.T) {
   config, err := testIPRanges()
 
