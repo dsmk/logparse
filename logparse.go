@@ -376,8 +376,8 @@ func dumpTrackedData (label string, tracking map[string]trackedData) {
   for k, v := range tracking {
 
     fmt.Printf("\n=======================================================================\n")
-    fmt.Printf("*** %s:%s (%d requests; %d unique hosts, %d base_uri)\n", 
-      label, k, v.base_uri["_total"], len(v.hosts), len(v.base_uri)-1 )
+    fmt.Printf("*** %s:%s (%s requests; %d unique hosts, %d base_uri)\n", 
+      label, k, addCommaToInt(v.base_uri["_total"]), len(v.hosts), len(v.base_uri)-1 )
 
     if v.trackHosts {
       fmt.Printf("\n * %s IPs\n", k)
@@ -389,7 +389,7 @@ func dumpTrackedData (label string, tracking map[string]trackedData) {
         } else { 
           hostname = iplist[0]
         }
-        fmt.Printf("  %8d: %s (%s:%s - hostname=%s)\n", item.Value, item.Key, label, k, hostname)
+        fmt.Printf("    %s: %s (%s:%s - hostname=%s)\n", addCommaToInt(item.Value), item.Key, label, k, hostname)
       }
     }
 
@@ -398,7 +398,7 @@ func dumpTrackedData (label string, tracking map[string]trackedData) {
       tempData := sortedMap(v.base_uri)
       for _, item := range tempData {
         if item.Key != "_total" {
-          fmt.Printf("  %8d: %s (%s:%s)\n", item.Value, item.Key, label, k)
+          fmt.Printf("    %s: %s (%s:%s)\n", addCommaToInt(item.Value), item.Key, label, k)
         }
       }
     }
@@ -412,16 +412,16 @@ func dumpTracked (tracking trackedOverall) {
   ignored_requests := tracking.total - tracking.onCampus - tracking.offCampus
   ignored_bytes := tracking.totalBytes - tracking.onCampusBytes - tracking.offCampusBytes
 
-  fmt.Printf("### Total requests= %d kbytes=%.2f \n", tracking.total, total_bytes/1024)
-  fmt.Printf("### On Campus: requests= %d (%.2f %%) kbytes= %d (%.2f %%)\n", 
-    tracking.onCampus, 100*float64(tracking.onCampus)/total_requests,
-    tracking.onCampusBytes/1024, 100*float64(tracking.onCampusBytes)/total_bytes)
-  fmt.Printf("### Off Campus: requests= %d (%.2f %%) kbytes= %d (%.2f %%)\n", 
-    tracking.offCampus, 100*float64(tracking.offCampus)/total_requests,
-    tracking.offCampusBytes/1024, 100*float64(tracking.offCampusBytes)/total_bytes)
-  fmt.Printf("### Ignored: requests= %d (%.2f %%) kbytes= %d (%.2f %%)\n", 
-    ignored_requests, 100*float64(ignored_requests)/total_requests,
-    ignored_bytes/1024, 100*float64(ignored_bytes)/total_bytes)
+  fmt.Printf("### Total requests= %s kbytes=%.2f \n", addCommaToInt(tracking.total), total_bytes/1024)
+  fmt.Printf("### On Campus: requests= %s (%.2f %%) kbytes= %s (%.2f %%)\n", 
+    addCommaToInt(tracking.onCampus), 100*float64(tracking.onCampus)/total_requests,
+    addCommaToInt64(tracking.onCampusBytes/1024), 100*float64(tracking.onCampusBytes)/total_bytes)
+  fmt.Printf("### Off Campus: requests= %s (%.2f %%) kbytes= %s (%.2f %%)\n", 
+    addCommaToInt(tracking.offCampus), 100*float64(tracking.offCampus)/total_requests,
+    addCommaToInt64(tracking.offCampusBytes/1024), 100*float64(tracking.offCampusBytes)/total_bytes)
+  fmt.Printf("### Ignored: requests= %s (%.2f %%) kbytes= %s (%.2f %%)\n", 
+    addCommaToInt(ignored_requests), 100*float64(ignored_requests)/total_requests,
+    addCommaToInt64(ignored_bytes/1024), 100*float64(ignored_bytes)/total_bytes)
 
   for k, v := range tracking.tracked {
     dumpTrackedData("network-"+k, v.networks)
