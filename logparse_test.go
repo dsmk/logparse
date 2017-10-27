@@ -177,12 +177,12 @@ func testTrackStuff (t *testing.T, lines []string, numOnCampus int, bytesOnCampu
   t.Logf("tracking=%+v", tracking)
 
   // check that we have the correct number of onCampus requests
-  if tracking.onCampus != numOnCampus {
-    t.Errorf("Incorrect number of onCampus requests afterwards (%d instead of %d)", tracking.onCampus, numOnCampus)
+  if tracking.OnCampus != numOnCampus {
+    t.Errorf("Incorrect number of onCampus requests afterwards (%d instead of %d)", tracking.OnCampus, numOnCampus)
   }
 
-  if tracking.onCampusBytes != bytesOnCampus {
-    t.Errorf("Incorrect number of onCampus bytes afterwards (%d instead of %d)", tracking.onCampusBytes, bytesOnCampus)
+  if tracking.OnCampusBytes != bytesOnCampus {
+    t.Errorf("Incorrect number of onCampus bytes afterwards (%d instead of %d)", tracking.OnCampusBytes, bytesOnCampus)
   }
 
   return tracking, nil
@@ -201,23 +201,23 @@ func TestHtbin10Net (t *testing.T) {
 
   //t.Errorf("tracking=%+v", tracking)
   //t.Errorf("tracking[_default]=%+v", tracking.tracked["_default"])
-  vHostEntry, isPresent := tracking.tracked["_default"]
+  vHostEntry, isPresent := tracking.Tracked["_default"]
   if isPresent {
     //t.Errorf("isPresent: _total=%d len=%d\n", vHostEntry.networks["10net"].base_uri["_total"], len(lines))
 
     // double-check that we have the correct number of records in the 10net
-    if vHostEntry.networks["10net"].base_uri["_total"] != len(lines) {
-      t.Errorf("wrong number of entry: %d instead of %d", vHostEntry.networks["10net"].base_uri["_total"], len(lines))
+    if vHostEntry.Networks["10net"].Base_uri["_total"] != len(lines) {
+      t.Errorf("wrong number of entry: %d instead of %d", vHostEntry.Networks["10net"].Base_uri["_total"], len(lines))
     }
 
     // ensure that we have an htbin entry
-    //t.Errorf("site=%s data=%+v", "htbin", vHostEntry.sites)
-    siteEntry, sIsPresent := vHostEntry.sites["htbin"]
+    //t.Errorf("site=%s data=%+v", "htbin", vHostEntry.Sites)
+    siteEntry, sIsPresent := vHostEntry.Sites["htbin"]
     //t.Logf("site: entry=%+v isPresent=%b\n", siteEntry, sIsPresent)
     if sIsPresent {
       t.Log("site htbin found: %+v", siteEntry)
     } else {
-      t.Errorf("Should have entry for site htbin: %+v", vHostEntry.sites)
+      t.Errorf("Should have entry for site htbin: %+v", vHostEntry.Sites)
     }
 
   } else {
@@ -238,20 +238,20 @@ func TestDoubleDoubleQuotes (t *testing.T) {
 
   //t.Logf("tracking=%+v", tracking)
   //t.Errorf("tracking[_default]=%+v", tracking["_default"])
-  vHostEntry, isPresent := tracking.tracked["_default"]
+  vHostEntry, isPresent := tracking.Tracked["_default"]
   if isPresent {
     //t.Errorf("isPresent: _total=%d len=%d\n", vHostEntry.networks["10net"].base_uri["_total"], len(lines))
 
     // double-check that we have the correct number of records in the 10net
-    if vHostEntry.networks["10net"].base_uri["_total"] != 0 {
-      t.Errorf("wrong number of entry: %d instead of %d", vHostEntry.networks["10net"].base_uri["_total"], len(lines))
+    if vHostEntry.Networks["10net"].Base_uri["_total"] != 0 {
+      t.Errorf("wrong number of entry: %d instead of %d", vHostEntry.Networks["10net"].Base_uri["_total"], len(lines))
     }
 
     // ensure that the sites hash is empty
-    if len(vHostEntry.sites) == 0 {
+    if len(vHostEntry.Sites) == 0 {
       t.Log("sites map is empty")
     } else {
-      t.Errorf("sites should be empty but it is %+v", vHostEntry.sites)
+      t.Errorf("sites should be empty but it is %+v", vHostEntry.Sites)
     }
 
   } else {
@@ -272,7 +272,7 @@ func TestIgnore (t *testing.T) {
 
   //t.Errorf("tracking=%+v", tracking)
   //t.Errorf("tracking[_default]=%+v", tracking["_default"])
-  _, isPresent := tracking.tracked["_default"]
+  _, isPresent := tracking.Tracked["_default"]
   if isPresent {
     t.Errorf("Ignored IP should not generate a _default vhost since it is skipped")
   } 
@@ -291,23 +291,23 @@ func TestHtbinPublic (t *testing.T) {
 
   //t.Errorf("tracking=%+v", tracking)
   //t.Errorf("tracking[_default]=%+v", tracking["_default"])
-  vHostEntry, isPresent := tracking.tracked["_default"]
+  vHostEntry, isPresent := tracking.Tracked["_default"]
   if isPresent {
     //t.Errorf("isPresent: _total=%d len=%d\n", vHostEntry.networks["10net"].base_uri["_total"], len(lines))
 
     // double-check that we have the correct number of records in the 10net
-    if vHostEntry.networks["10net"].base_uri["_total"] != 0 {
-      t.Errorf("wrong number of entry: %d instead of %d", vHostEntry.networks["10net"].base_uri["_total"], len(lines))
+    if vHostEntry.Networks["10net"].Base_uri["_total"] != 0 {
+      t.Errorf("wrong number of entry: %d instead of %d", vHostEntry.Networks["10net"].Base_uri["_total"], len(lines))
     }
 
     // ensure that we have an htbin entry
     //t.Errorf("site=%s data=%+v", "htbin", vHostEntry.sites)
-    siteEntry, sIsPresent := vHostEntry.sites["htbin"]
+    siteEntry, sIsPresent := vHostEntry.Sites["htbin"]
     //t.Logf("site: entry=%+v isPresent=%b\n", siteEntry, sIsPresent)
     if sIsPresent {
       t.Log("site htbin found: %+v", siteEntry)
     } else {
-      t.Errorf("Should have entry for site htbin: %+v", vHostEntry.sites)
+      t.Errorf("Should have entry for site htbin: %+v", vHostEntry.Sites)
     }
 
   } else {
@@ -328,20 +328,20 @@ func TestRootPublic (t *testing.T) {
 
   //t.Logf("tracking=%+v", tracking)
   //t.Errorf("tracking[_default]=%+v", tracking["_default"])
-  vHostEntry, isPresent := tracking.tracked["_default"]
+  vHostEntry, isPresent := tracking.Tracked["_default"]
   if isPresent {
     //t.Errorf("isPresent: _total=%d len=%d\n", vHostEntry.networks["10net"].base_uri["_total"], len(lines))
 
     // double-check that we have the correct number of records in the 10net
-    if vHostEntry.networks["10net"].base_uri["_total"] != 0 {
-      t.Errorf("wrong number of entry: %d instead of %d", vHostEntry.networks["10net"].base_uri["_total"], len(lines))
+    if vHostEntry.Networks["10net"].Base_uri["_total"] != 0 {
+      t.Errorf("wrong number of entry: %d instead of %d", vHostEntry.Networks["10net"].Base_uri["_total"], len(lines))
     }
 
     // ensure that the sites hash is empty
-    if len(vHostEntry.sites) == 0 {
+    if len(vHostEntry.Sites) == 0 {
       t.Log("sites map is empty")
     } else {
-      t.Errorf("sites should be empty but it is %+v", vHostEntry.sites)
+      t.Errorf("sites should be empty but it is %+v", vHostEntry.Sites)
     }
 
   } else {
@@ -362,20 +362,20 @@ func TestRoot10Net (t *testing.T) {
 
   //t.Logf("tracking=%+v", tracking)
   //t.Errorf("tracking[_default]=%+v", tracking["_default"])
-  vHostEntry, isPresent := tracking.tracked["_default"]
+  vHostEntry, isPresent := tracking.Tracked["_default"]
   if isPresent {
-    //t.Errorf("isPresent: _total=%d len=%d\n", vHostEntry.networks["10net"].base_uri["_total"], len(lines))
+    //t.Errorf("isPresent: _total=%d len=%d\n", vHostEntry.Networks["10net"].Base_uri["_total"], len(lines))
 
     // double-check that we have the correct number of records in the 10net
-    if vHostEntry.networks["10net"].base_uri["_total"] != len(lines) {
-      t.Errorf("wrong number of entry: %d instead of %d", vHostEntry.networks["10net"].base_uri["_total"], len(lines))
+    if vHostEntry.Networks["10net"].Base_uri["_total"] != len(lines) {
+      t.Errorf("wrong number of entry: %d instead of %d", vHostEntry.Networks["10net"].Base_uri["_total"], len(lines))
     }
 
     // ensure that the sites hash is empty
-    if len(vHostEntry.sites) == 0 {
+    if len(vHostEntry.Sites) == 0 {
       t.Log("sites map is empty")
     } else {
-      t.Errorf("sites should be empty but it is %+v", vHostEntry.sites)
+      t.Errorf("sites should be empty but it is %+v", vHostEntry.Sites)
     }
 
   } else {
