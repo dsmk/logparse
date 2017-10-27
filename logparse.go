@@ -16,27 +16,27 @@ import (
 )
 
 type trackedData struct {
-  num_requests int
-  hosts map[string]int
-  base_uri map[string]int
-  trackHosts bool
-  trackURI bool
+  NumRequests int
+  Hosts map[string]int
+  Base_uri map[string]int
+  TrackHosts bool
+  TrackURI bool
 }
 
 type trackedInfo struct {
-  number int
-  networks map[string]trackedData
-  sites map[string]trackedData
+  Number int
+  Networks map[string]trackedData
+  Sites map[string]trackedData
 }
 
 type trackedOverall struct {
-  total int
-  totalBytes int64
-  onCampus int
-  onCampusBytes int64
-  offCampus int
-  offCampusBytes int64
-  tracked map[string]trackedInfo
+  Total int
+  TotalBytes int64
+  OnCampus int
+  OnCampusBytes int64
+  OffCampus int
+  OffCampusBytes int64
+  Tracked map[string]trackedInfo
 }
 
 type network struct {
@@ -267,13 +267,13 @@ func trackEntryItem (tracking map[string]trackedData, label string, ip string , 
     element = tracking[label]
   }
 
-  element.num_requests++
-  element.base_uri["_total"]++
+  element.NumRequests++
+  element.Base_uri["_total"]++
   if trackHosts {
-    element.hosts[ip]++
+    element.Hosts[ip]++
   }
   if trackURI {
-    element.base_uri[base_uri]++
+    element.Base_uri[base_uri]++
   }
 
   //fmt.Printf("trackEntryItem end element=%+v", element)
@@ -288,8 +288,8 @@ func trackEntry (config logConfig, tracking *trackedOverall, entry map[string]st
   }
 
   // always increment the total counter
-  tracking.total++
-  tracking.totalBytes += bytes
+  tracking.Total++
+  tracking.TotalBytes += bytes
 
   // if we are to ignore this entry then skip it
   if ignore {
@@ -298,11 +298,11 @@ func trackEntry (config logConfig, tracking *trackedOverall, entry map[string]st
 
   // determine if we are on campus or off and record the bytes and number of requests
   if isOnCampus(entry["ip"]) {
-    tracking.onCampus++
-    tracking.onCampusBytes += bytes
+    tracking.OnCampus++
+    tracking.OnCampusBytes += bytes
   } else {
-    tracking.offCampus++
-    tracking.offCampusBytes += bytes
+    tracking.OffCampus++
+    tracking.OffCampusBytes += bytes
   }
 
   // now we check what the virtual host wants us to do
@@ -317,18 +317,18 @@ func trackEntry (config logConfig, tracking *trackedOverall, entry map[string]st
   if ignoreVHost {
   } else {
     // first we determine which virtual host we have and get its data
-    element, isPresent := tracking.tracked[virtual]
+    element, isPresent := tracking.Tracked[virtual]
     if isPresent {
     } else {
       element = initTrackedInfo()
-      tracking.tracked[virtual] = element
+      tracking.Tracked[virtual] = element
     }
 
     // if track is false then override both the trackHosts and trackURI variables
     if trackVHost {
-      trackEntryItem(element.networks, label, ip, entry["base_uri"], trackHosts, trackURI)
+      trackEntryItem(element.Networks, label, ip, entry["base_uri"], trackHosts, trackURI)
     } else {
-      trackEntryItem(element.networks, label, ip, entry["base_uri"], false, false)
+      trackEntryItem(element.Networks, label, ip, entry["base_uri"], false, false)
     }
 
     // next track the toplevel if it exists
@@ -344,9 +344,9 @@ func trackEntry (config logConfig, tracking *trackedOverall, entry map[string]st
     if ignoreSite {
     } else {
       if trackSite {
-        trackEntryItem(element.sites, toplevel, ip, entry["base_uri"], true, true)
+        trackEntryItem(element.Sites, toplevel, ip, entry["base_uri"], true, true)
       } else {
-        trackEntryItem(element.sites, toplevel, ip, entry["base_uri"], false, false)
+        trackEntryItem(element.Sites, toplevel, ip, entry["base_uri"], false, false)
       }
     }
   }
@@ -377,11 +377,11 @@ func dumpTrackedData (label string, tracking map[string]trackedData) {
 
     fmt.Printf("\n=======================================================================\n")
     fmt.Printf("*** %s:%s (%s requests; %d unique hosts, %d base_uri)\n", 
-      label, k, addCommaToInt(v.base_uri["_total"]), len(v.hosts), len(v.base_uri)-1 )
+      label, k, addCommaToInt(v.Base_uri["_total"]), len(v.Hosts), len(v.Base_uri)-1 )
 
-    if v.trackHosts {
+    if v.TrackHosts {
       fmt.Printf("\n * %s IPs\n", k)
-      tempData := sortedMap(v.hosts)
+      tempData := sortedMap(v.Hosts)
       for _, item := range tempData {
         iplist, err := net.LookupAddr(item.Key)
         if err != nil {
@@ -393,9 +393,9 @@ func dumpTrackedData (label string, tracking map[string]trackedData) {
       }
     }
 
-    if v.trackURI {
+    if v.TrackURI {
       fmt.Printf("\n * %s base_uri requests\n", k)
-      tempData := sortedMap(v.base_uri)
+      tempData := sortedMap(v.Base_uri)
       for _, item := range tempData {
         if item.Key != "_total" {
           fmt.Printf("    %s: %s (%s:%s)\n", addCommaToInt(item.Value), item.Key, label, k)
@@ -407,27 +407,34 @@ func dumpTrackedData (label string, tracking map[string]trackedData) {
 }
 
 func dumpTracked (tracking trackedOverall) {
-  total_requests := float64(tracking.total)
-  total_bytes := float64(tracking.totalBytes)
-  ignored_requests := tracking.total - tracking.onCampus - tracking.offCampus
-  ignored_bytes := tracking.totalBytes - tracking.onCampusBytes - tracking.offCampusBytes
+  total_requests := float64(tracking.Total)
+  total_bytes := float64(tracking.TotalBytes)
+  ignored_requests := tracking.Total - tracking.OnCampus - tracking.OffCampus
+  ignored_bytes := tracking.TotalBytes - tracking.OnCampusBytes - tracking.OffCampusBytes
 
-  fmt.Printf("### Total requests= %s kbytes=%.2f \n", addCommaToInt(tracking.total), total_bytes/1024)
+  fmt.Printf("### Total requests= %s kbytes=%.2f \n", addCommaToInt(tracking.Total), total_bytes/1024)
   fmt.Printf("### On Campus: requests= %s (%.2f %%) kbytes= %s (%.2f %%)\n", 
-    addCommaToInt(tracking.onCampus), 100*float64(tracking.onCampus)/total_requests,
-    addCommaToInt64(tracking.onCampusBytes/1024), 100*float64(tracking.onCampusBytes)/total_bytes)
+    addCommaToInt(tracking.OnCampus), 100*float64(tracking.OnCampus)/total_requests,
+    addCommaToInt64(tracking.OnCampusBytes/1024), 100*float64(tracking.OnCampusBytes)/total_bytes)
   fmt.Printf("### Off Campus: requests= %s (%.2f %%) kbytes= %s (%.2f %%)\n", 
-    addCommaToInt(tracking.offCampus), 100*float64(tracking.offCampus)/total_requests,
-    addCommaToInt64(tracking.offCampusBytes/1024), 100*float64(tracking.offCampusBytes)/total_bytes)
+    addCommaToInt(tracking.OffCampus), 100*float64(tracking.OffCampus)/total_requests,
+    addCommaToInt64(tracking.OffCampusBytes/1024), 100*float64(tracking.OffCampusBytes)/total_bytes)
   fmt.Printf("### Ignored: requests= %s (%.2f %%) kbytes= %s (%.2f %%)\n", 
     addCommaToInt(ignored_requests), 100*float64(ignored_requests)/total_requests,
     addCommaToInt64(ignored_bytes/1024), 100*float64(ignored_bytes)/total_bytes)
 
-  for k, v := range tracking.tracked {
-    dumpTrackedData("network-"+k, v.networks)
-    dumpTrackedData("sites-"+k, v.sites)
+  for k, v := range tracking.Tracked {
+    dumpTrackedData("network-"+k, v.Networks)
+    dumpTrackedData("sites-"+k, v.Sites)
   }
+}
 
+func jsonTracked (tracking trackedOverall) {
+  b, err := json.Marshal(tracking)
+  if err != nil {
+    fmt.Println("error:", err)
+  }
+  os.Stderr.Write(b)
 }
 
 var whitespace = regexp.MustCompile(`\s+`)
@@ -652,7 +659,7 @@ func initTrackedInfo () (trackedInfo) {
 
 func initTrackedOverall () (trackedOverall) {
   vhosts := make(map[string]trackedInfo)
-  return trackedOverall{ tracked: vhosts }
+  return trackedOverall{ Tracked: vhosts }
 }
 
 func main() {
@@ -688,5 +695,7 @@ func main() {
 
   dumpTracked(tracking)
 
+  // output the json form for future combining of stuff
+  jsonTracked(tracking)
 }
 
